@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Two-Pointer GIF-like Visualization</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Two-Pointer GIF-like Visualization</h1>
+      <div class="input-container">
+        <label for="A">List A:</label>
+        <textarea id="A" style="display: none;"></textarea>
+        <div id="A-array-container" class="array-input-container"></div>
+        <div class="array-tools">
+          <button class="action-btn" onclick="sortArrayInput('A')" title="Sort list A in ascending order">
+            <span class="icon">🔄</span> Sort
+          </button>
+          <button class="action-btn" onclick="generateRandomArray('A', document.getElementById('random-size-A').value)">
+            <span class="icon">🎲</span> Random
+          </button>
+          <input type="number" id="random-size-A" min="1" max="20" value="5" style="width: 50px;" title="Number of random elements">
+          <button class="action-btn" onclick="initArrayContainer('A')" title="Clear list A">
+            <span class="icon">❌</span> Clear
+          </button>
+        </div>
+        <br />
+        
+        <label for="B">List B:</label>
+        <textarea id="B" style="display: none;"></textarea>
+        <div id="B-array-container" class="array-input-container"></div>
+        <div class="array-tools">
+          <button class="action-btn" onclick="sortArrayInput('B')" title="Sort list B in ascending order">
+            <span class="icon">🔄</span> Sort
+          </button>
+          <button class="action-btn" onclick="generateRandomArray('B', document.getElementById('random-size-B').value)">
+            <span class="icon">🎲</span> Random
+          </button>
+          <input type="number" id="random-size-B" min="1" max="20" value="5" style="width: 50px;" title="Number of random elements">
+          <button class="action-btn" onclick="initArrayContainer('B')" title="Clear list B">
+            <span class="icon">❌</span> Clear
+          </button>
+        </div>
+        
+        <div class="info-box">
+          <p><strong>Note:</strong> Each number must be between -10^9 and 10^9</p>
+          <p><strong>Tip:</strong> Click on an element box to edit or remove it. Press Enter to add a new element.</p>
+        </div>
+        
+        <div class="main-controls">
+          <button id="play-button" onclick="startAnimation()" title="Generate visualization and start animation">
+            <span class="icon">▶</span> Generate & Play
+          </button>
+          <button id="reset-button" onclick="resetVisualization()" title="Clear all data and reset visualization">
+            <span class="icon">🔄</span> Clear All
+          </button>
+        </div>
+      </div>
+      
+      <div id="animation-controls" class="animation-controls">
+        <div class="speed-control">
+          <label for="speed">Animation Speed:</label>
+          <input type="range" id="speed" min="100" max="2000" step="100" value="1000">
+          <span id="speed-value">1s</span>
+        </div>
+      </div>
+      
+      <div class="progress-tracker" id="progress-tracker"></div>
+      <div class="visualization" id="visualization"></div>
+      <div class="result" id="result"></div>
+    </div>
+    
+    <script src="array-utils.js"></script>
+    <script src="animation.js"></script>
+    <script src="ui-controls.js"></script>
+    <script>
+      // Initialize the app once the DOM is fully loaded
+      document.addEventListener("DOMContentLoaded", function() {
+        initializeApp();
+      });
+    </script>
+  </body>
+</html>

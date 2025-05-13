@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Two-Pointer GIF-like Visualization</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        line-height: 1.6;
+        background-color: #f0f0f0;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .input-container {
+        margin-bottom: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      label {
+        display: inline-block;
+        width: 100px;
+        font-weight: bold;
+      }
+      input {
+        padding: 8px;
+        margin: 5px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 150px;
+      }
+      button {
+        padding: 8px 20px;
+        margin: 5px;
+        cursor: pointer;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      .visualization {
+        margin-top: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+      .pointer {
+        color: #e74c3c;
+        font-weight: bold;
+        text-decoration: underline;
+        animation: blink 0.5s infinite;
+      }
+      .result {
+        margin-top: 20px;
+        font-size: 20px;
+        font-weight: bold;
+        color: #2c3e50;
+      }
+      .step {
+        border: 1px solid #ddd;
+        padding: 15px;
+        margin-bottom: 10px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        display: none;
+        transition: all 0.3s ease;
+      }
+      .step.active {
+        display: block;
+        background-color: #e0f7fa;
+        border-color: #00acc1;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0.5;
+        }
+      }
+      .progress-tracker {
+        margin: 10px 0;
+        font-weight: bold;
+        font-size: 16px;
+        color: #2196F3;
+      }
+      .speed-control {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+      }
+      .speed-control label {
+        margin-right: 10px;
+      }
+      .main-controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 15px;
+      }
+      .main-controls button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 5px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+      }
+      .main-controls button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 8px rgba(0,0,0,0.3);
+      }
+      .main-controls #play-button {
+        background-color: #2196F3;
+      }
+      .main-controls #play-button:hover {
+        background-color: #1976D2;
+      }
+      .main-controls #reset-button {
+        background-color: #F44336;
+      }
+      .main-controls #reset-button:hover {
+        background-color: #D32F2F;
+      }
+      .icon {
+        font-size: 18px;
+      }
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-family: monospace;
+        resize: vertical;
+      }
+      
+      .input-controls {
+        display: flex;
+        gap: 10px;
+        margin: 5px 0 15px 0;
+      }
+      
+      .action-btn {
+        padding: 4px 10px;
+        background-color: #607d8b;
+        font-size: 14px;
+      }
+      
+      .action-btn:hover {
+        background-color: #455a64;
+      }
+      
+      .info-box {
+        background-color: #e3f2fd;
+        border-left: 4px solid #2196F3;
+        padding: 8px 15px;
+        margin: 10px 0;
+        font-size: 0.9em;
+      }
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(0,172,193,0.5); }
+        70% { box-shadow: 0 0 0 8px rgba(0,172,193,0); }
+        100% { box-shadow: 0 0 0 0 rgba(0,172,193,0); }
+      }
+      
+      /* Styles for interactive array input */
+      .array-input-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 10px 0;
+        min-height: 60px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        border: 1px dashed #ccc;
+      }
+      
+      .array-input-item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 60px; /* Increased from 50px to 60px */
+        height: 50px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f5f5f5;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        padding: 0 2px; /* Added padding */
+      }
+      
+      .array-input-item:hover {
+        background-color: #e0f7fa;
+        border-color: #00acc1;
+      }
+      
+      .array-input-item input {
+        width: 60px; /* Increased from 50px to 60px */
+        height: 40px;
+        border: none;
+        background: transparent;
+        text-align: center;
+        font-size: 16px;
+        padding: 0 5px; /* Added padding */
+      }
+      
+      .array-input-item input:focus {
+        outline: none;
+      }
+      
+      .array-input-item .remove-btn {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background-color: #f44336;
+        color: white;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        cursor: pointer;
+        line-height: 1;
+      }
+      
+      .array-input-item:hover .remove-btn {
+        display: flex;
+      }
+      
+      .add-item-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 50px;
+        height: 50px;
+        border: 2px dashed #ccc;
+        border-radius: 4px;
+        background-color: #fafafa;
+        cursor: pointer;
+        font-size: 24px;
+        color: #ccc;
+        transition: all 0.2s;
+      }
+      
+      .add-item-btn:hover {
+        border-color: #2196F3;
+        color: #2196F3;
+      }
+      
+      .array-tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      
+      .animation-controls {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f5f5f5;
+        border-radius: 5px;
+        display: none;
+      }
+      
+      .animation-controls.visible {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Two-Pointer GIF-like Visualization</h1>
+      <div class="input-container">
+        <label for="A">List A:</label>
+        <textarea id="A" style="display: none;"></textarea>
+        <div id="A-array-container" class="array-input-container"></div>
+        <div class="array-tools">
+          <button class="action-btn" onclick="sortArrayInput('A')" title="Sort list A in ascending order">
+            <span class="icon">🔄</span> Sort
+          </button>
+          <button class="action-btn" onclick="generateRandomArray('A', document.getElementById('random-size-A').value)">
+            <span class="icon">🎲</span> Random
+          </button>
+          <input type="number" id="random-size-A" min="1" max="20" value="5" style="width: 50px;" title="Number of random elements">
+          <button class="action-btn" onclick="initArrayContainer('A')" title="Clear list A">
+            <span class="icon">❌</span> Clear
+          </button>
+        </div>
+        <br />
+        
+        <label for="B">List B:</label>
+        <textarea id="B" style="display: none;"></textarea>
+        <div id="B-array-container" class="array-input-container"></div>
+        <div class="array-tools">
+          <button class="action-btn" onclick="sortArrayInput('B')" title="Sort list B in ascending order">
+            <span class="icon">🔄</span> Sort
+          </button>
+          <button class="action-btn" onclick="generateRandomArray('B', document.getElementById('random-size-B').value)">
+            <span class="icon">🎲</span> Random
+          </button>
+          <input type="number" id="random-size-B" min="1" max="20" value="5" style="width: 50px;" title="Number of random elements">
+          <button class="action-btn" onclick="initArrayContainer('B')" title="Clear list B">
+            <span class="icon">❌</span> Clear
+          </button>
+        </div>
+        
+        <div class="info-box">
+          <p><strong>Note:</strong> Each number must be between -10^9 and 10^9</p>
+          <p><strong>Tip:</strong> Click on an element box to edit or remove it. Press Enter to add a new element.</p>
+        </div>
+        
+        <div class="main-controls">
+          <button id="play-button" onclick="startAnimation()" title="Generate visualization and start animation">
+            <span class="icon">▶</span> Generate & Play
+          </button>
+          <button id="reset-button" onclick="resetVisualization()" title="Clear all data and reset visualization">
+            <span class="icon">🔄</span> Clear All
+          </button>
+        </div>
+      </div>
+      
+      <div id="animation-controls" class="animation-controls">
+        <div class="speed-control">
+          <label for="speed">Animation Speed:</label>
+          <input type="range" id="speed" min="100" max="2000" step="100" value="1000">
+          <span id="speed-value">1s</span>
+        </div>
+      </div>
+      
+      <div class="progress-tracker" id="progress-tracker"></div>
+      <div class="visualization" id="visualization"></div>
+      <div class="result" id="result"></div>
+    </div>
+
+    <script>
+      // Declare global variables at the top
+      let steps = [];
+      let currentStep = 0;
+      let animationInterval;
+
+      // Update speed value display when slider changes
+      document.getElementById("speed").addEventListener("input", function() {
+        const speedValue = this.value;
+        document.getElementById("speed-value").textContent = (speedValue / 1000) + 's';
+        
+        // If animation is running, update the interval
+        if (animationInterval) {
+          clearInterval(animationInterval);
+          animationInterval = setInterval(nextStep, speedValue);
+        }
+      });
+
+      function startAnimation() {
+        // Clear any existing animation
+        clearInterval(animationInterval);
+        isPaused = false;
+        
+        try {
+          // Use the values from interactive inputs
+          let listA = [];
+          let listB = [];
+          
+          // Safely get values from input elements
+          const containerA = document.getElementById('A-array-container');
+          if (containerA) {
+            containerA.querySelectorAll('.array-input-item input').forEach(input => {
+              if (input && input.value && typeof input.value === 'string' && !isNaN(parseInt(input.value.trim()))) {
+                listA.push(parseInt(input.value.trim()));
+              }
+            });
+          }
+          
+          const containerB = document.getElementById('B-array-container');
+          if (containerB) {
+            containerB.querySelectorAll('.array-input-item input').forEach(input => {
+              if (input && input.value && typeof input.value === 'string' && !isNaN(parseInt(input.value.trim()))) {
+                listB.push(parseInt(input.value.trim()));
+              }
+            });
+          }
+          
+          // Validation
+          if (!listA || listA.length === 0) {
+            throw new Error("List A cannot be empty. Please add at least one number.");
+          }
+          if (!listB || listB.length === 0) {
+            throw new Error("List B cannot be empty. Please add at least one number.");
+          }
+          
+          // Show animation controls
+          const animControls = document.getElementById("animation-controls");
+          if (animControls) {
+            animControls.classList.add("visible");
+          }
+          
+          // Reset UI controls
+          document.getElementById("pause-animation").textContent = "Pause";
+          document.getElementById("pause-animation").disabled = false;
+          document.getElementById("prev-step").disabled = true;
+          document.getElementById("next-step").disabled = true;
+          
+          // Build steps for visualization
+          let i = 0, j = 0;
+          let C = [];
+          steps = [];
+          
+          while (i < listA.length && j < listB.length) {
+            if (listA[i] < listB[j]) {
+              C.push(listA[i]);
+              steps.push({
+                C: [...C],
+                A_pointer: i,
+                B_pointer: j,
+                selected: `A: ${listA[i]}`,
+                listA: [...listA],
+                listB: [...listB],
+                currentA: listA[i],
+                currentB: j < listB.length ? listB[j] : null
+              });
+              i++;
+            } else {
+              C.push(listB[j]);
+              steps.push({
+                C: [...C],
+                A_pointer: i,
+                B_pointer: j,
+                selected: `B: ${listB[j]}`,
+                listA: [...listA],
+                listB: [...listB],
+                currentA: i < listA.length ? listA[i] : null,
+                currentB: listB[j]
+              });
+              j++;
+            }
+          }
+          
+          // Add each remaining element as a separate step
+          while (i < listA.length) {
+            C.push(listA[i]);
+            steps.push({
+              C: [...C],
+              A_pointer: i,
+              B_pointer: j,
+              selected: `A: ${listA[i]}`,
+              listA: [...listA],
+              listB: [...listB],
+              currentA: listA[i],
+              currentB: null
+            });
+            i++;
+          }
+          
+          while (j < listB.length) {
+            const remaining = listB.slice(j);
+            C.push(...remaining); // Push all remaining elements to array
+            steps.push({
+              C: [...C], // Clone the array
+              A_pointer: i,
+              B_pointer: listB.length,
+              selected: `B (remaining): ${remaining.join(', ')}`,
+              listA: [...listA],
+              listB: [...listB],
+              currentA: null,
+              currentB: null
+            });
+            j++;
+          }
+          
+          currentStep = 0;
+          displayStep();
+          updateProgressTracker();
+          const speedValue = document.getElementById("speed").value;
+          animationInterval = setInterval(nextStep, speedValue);
+          
+          // Auto-scroll to the animation section
+          setTimeout(() => {
+            document.getElementById("visualization").scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start'
+            });
+          }, 100);
+        } catch (error) {
+          alert(`Error: ${error.message}`);
+        }
+      }
+
+      function displayStep() {
+        const visualization = document.getElementById("visualization");
+        visualization.innerHTML = "<h2>Merging Process:</h2>";
+        
+        if (steps.length === 0) return;
+        
+        const step = steps[currentStep];
+        const stepDiv = document.createElement("div");
+        stepDiv.className = "step active";
+        
+        // Create visual representation of arrays
+        let listAHtml = '<div class="array-container">';
+        step.listA.forEach((num, idx) => {
+          const isPointer = idx === step.A_pointer;
+          const isSelected = idx === step.A_pointer && step.currentA !== null;
+          listAHtml += `<div class="array-item ${isPointer ? 'pointer' : ''} ${isSelected ? 'selected' : ''}">${num}</div>`;
+        });
+        listAHtml += '</div>';
+        
+        let listBHtml = '<div class="array-container">';
+        step.listB.forEach((num, idx) => {
+          const isPointer = idx === step.B_pointer;
+          const isSelected = idx === step.B_pointer && step.currentB !== null;
+          listBHtml += `<div class="array-item ${isPointer ? 'pointer' : ''} ${isSelected ? 'selected' : ''}">${num}</div>`;
+        });
+        listBHtml += '</div>';
+        
+        // Create visual representation of result array C - now always an array
+        let resultCHtml = '<div class="array-container result-container">';
+        step.C.forEach((num, idx) => {
+          // Highlight the latest added item
+          const isLatest = idx === step.C.length - 1;
+          resultCHtml += `<div class="array-item ${isLatest ? 'latest-added' : ''}">${num}</div>`;
+        });
+        resultCHtml += '</div>';
+        
+        stepDiv.innerHTML = `
+          <strong>Step ${currentStep + 1}:</strong><br>
+          <div class="step-details">
+            <p>Selected: ${step.selected}</p>
+            <div class="arrays">
+              <div class="array-row">
+                <span class="array-label">A:</span>
+                ${listAHtml}
+              </div>
+              <div class="array-row">
+                <span class="array-label">B:</span>
+                ${listBHtml}
+              </div>
+            </div>
+            <div class="result-section">
+              <p class="result-label">Current C:</p>
+              ${resultCHtml}
+            </div>
+          </div>
+        `;
+        
+        visualization.appendChild(stepDiv);
+      }
+
+      function updateProgressTracker() {
+        const progressTracker = document.getElementById("progress-tracker");
+        progressTracker.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+      }
+
+      function nextStep(isManual = false) {
+        // Prevent stepping beyond array bounds
+        if (currentStep >= steps.length - 1) {
+          // If at the last step, stop the animation
+          clearInterval(animationInterval);
+          
+          // Always use array join for display
+          const finalResult = steps[steps.length - 1].C.join(', ');
+          document.getElementById("result").innerText = `Final Result C: [${finalResult}]`;
+          document.getElementById("progress-tracker").textContent = `Completed: ${steps.length} steps`;
+          return;
+        }
+
+        currentStep++;
+        if (currentStep < steps.length) {
+          displayStep();
+          updateProgressTracker();
+          
+          // If manual navigation, update button states with robust boundary checks
+          if (isManual) {
+            document.getElementById("prev-step").disabled = currentStep <= 0;
+            document.getElementById("next-step").disabled = currentStep >= steps.length - 1;
+          }
+        } else {
+          // Safety check - this should not happen due to the check at the beginning
+          clearInterval(animationInterval);
+          document.getElementById("result").innerText = `Smallest Number C: ${steps[steps.length - 1].C.join(', ')}`;
+          document.getElementById("progress-tracker").textContent = `Completed: ${steps.length} steps`;
+          // Don't disable the pause button so we can still use it to toggle navigation
+          // document.getElementById("pause-animation").disabled = true;
+        }
+      }
+
+      function resetVisualization() {
+        clearInterval(animationInterval);
+        document.getElementById("visualization").innerHTML = "";
+        document.getElementById("result").innerText = "";
+        document.getElementById("progress-tracker").textContent = "";
+        document.getElementById("A").value = "";
+        document.getElementById("B").value = "";
+        
+        // Reset animation control buttons
+        isPaused = false;
+        document.getElementById("pause-animation").textContent = "Pause";
+        document.getElementById("pause-animation").disabled = false;
+        document.getElementById("prev-step").disabled = true;
+        document.getElementById("next-step").disabled = true;
+        
+        // Reset the visualization container to show initial state
+        document.getElementById("visualization").innerHTML = 
+          "<div class='initial-state'>Enter numbers and press 'Play Animation' to start</div>";
+      }
+
+      // Add navigation controls to the UI with 5 distinct buttons to toggle navigation
+      const controlsDiv = document.createElement("div");
+      controlsDiv.className = "step-controls";
+      controlsDiv.innerHTML = `
+        <button id="start-btn" title="Go to first step"><i>⏮</i> Start</button>
+        <button id="prev-step" disabled title="Go to previous step"><i>◀</i> Back</button>
+        <button id="pause-animation" title="Pause/Resume animation"><i>⏯</i> Pause</button>
+        <button id="next-step" disabled title="Go to next step">Next <i>▶</i></button>
+        <button id="finish-btn" title="Skip to final result"><i>⏭</i> Finish</button>
+      `;
+
+      // Insert after the progress tracker
+      const progressTracker = document.getElementById("progress-tracker");
+      progressTracker.after(controlsDiv);
+
+      // Add CSS for the enhanced step controls
+      const style = document.createElement("style");
+      style.textContent = `
+        .step-controls {
+          margin: 20px 0;
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+        }
+        
+        .step-controls button {
+          min-width: 80px;
+          font-weight: bold;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          border-radius: 5px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .step-controls button i {
+          font-style: normal;
+        };
+        
+        #start-btn, #finish-btn {
+          background-color: #3f51b5;
+        }
+        
+        #start-btn:hover, #finish-btn:hover {
+          background-color: #303f9f;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Variables to track animation state
+      let isPaused = false;
+
+      // Improved toggle pause function that properly handles class application
+      function togglePause() {
+        const pauseBtn = document.getElementById("pause-animation");
+        const visualizationEl = document.getElementById("visualization");
+        const progressTrackerEl = document.getElementById("progress-tracker");
+        
+        if (isPaused) {
+          // Resume animation if we have more steps
+          if (currentStep < steps.length - 1) {
+            const speedValue = document.getElementById("speed").value;
+            animationInterval = setInterval(() => nextStep(), speedValue);
+          }
+          
+          // Update UI
+          pauseBtn.textContent = "Pause";
+          pauseBtn.style.backgroundColor = "#4caf50"; // Green
+          pauseBtn.classList.remove("paused");
+          // Remove paused indicator from containers
+          visualizationEl.classList.remove("paused");
+          progressTrackerEl.classList.remove("paused");
+        } else {
+          // Pause animation
+          clearInterval(animationInterval);
+          // Update UI
+          pauseBtn.textContent = "Resume";
+          pauseBtn.style.backgroundColor = "#ff9800"; // Orange
+        //   pauseBtn.classList.add("paused");
+          // Add paused indicator to containers
+          visualizationEl.classList.add("paused");
+          progressTrackerEl.classList.add("paused");
+        }
+        
+        isPaused = !isPaused;
+        // Enable navigation buttons when paused, with proper boundary checks
+        document.getElementById("prev-step").disabled = !isPaused || currentStep <= 0;
+        document.getElementById("next-step").disabled = !isPaused || currentStep >= steps.length - 1;
+      }
+
+      // Go to first step function
+      function goToStart() {
+        clearInterval(animationInterval);
+        currentStep = 0;
+        displayStep();
+        updateProgressTracker();
+        
+        // Update button states
+        document.getElementById("prev-step").disabled = true;
+        document.getElementById("next-step").disabled = false;
+        document.getElementById("pause-animation").textContent = "▶ Play";
+        document.getElementById("pause-animation").style.backgroundColor = "#4caf50";
+        
+        isPaused = true;
+      }
+
+      // Skip to finish function
+      function skipToFinish() {
+        clearInterval(animationInterval);
+        currentStep = steps.length - 1;
+        displayStep();
+        updateProgressTracker();
+        
+        // Always use array join for display
+        const finalResult = steps[steps.length - 1].C.join(', ');
+        document.getElementById("result").innerText = `Final Result C: [${finalResult}]`;
+        
+        // Update button states
+        document.getElementById("prev-step").disabled = false;
+        document.getElementById("next-step").disabled = true;
+        document.getElementById("pause-animation").textContent = "▶ Play";
+        document.getElementById("pause-animation").style.backgroundColor = "#4caf50";
+        
+        isPaused = true;
+      }
+
+      // Updated next step function with better boundary checking
+      function nextStep(isManual = false) {
+        // Prevent stepping beyond array bounds
+        if (currentStep >= steps.length - 1) {
+          // If at the last step, stop the animation
+          clearInterval(animationInterval);
+          
+          // Always use array join for display
+          const finalResult = steps[steps.length - 1].C.join(', ');
+          document.getElementById("result").innerText = `Final Result C: [${finalResult}]`;
+          
+          document.getElementById("progress-tracker").textContent = `Completed: ${steps.length} steps`;
+          return;
+        }
+
+        currentStep++;
+        if (currentStep < steps.length) {
+          displayStep();
+          updateProgressTracker();
+          
+          // If manual navigation, update button states with robust boundary checks
+          if (isManual) {
+            document.getElementById("prev-step").disabled = currentStep <= 0;
+            document.getElementById("next-step").disabled = currentStep >= steps.length - 1;
+          }
+        } else {
+          // Safety check - this should not happen due to the check at the beginning
+          clearInterval(animationInterval);
+          document.getElementById("result").innerText = `Smallest Number C: ${steps[steps.length - 1].C.join(', ')}`;
+          document.getElementById("progress-tracker").textContent = `Completed: ${steps.length} steps`;
+          // Don't disable the pause button so we can still use it to toggle navigation
+          // document.getElementById("pause-animation").disabled = true;
+        }
+      }
+
+      // Updated prevStep function with better error handling
+      function prevStep() {
+        // Prevent stepping before first step
+        if (currentStep <= 0) return;
+        
+        currentStep--;
+        displayStep();
+        updateProgressTracker();
+        
+        // Update button states with strict boundary checks
+        document.getElementById("next-step").disabled = false; // Next is always available if we went back
+        document.getElementById("prev-step").disabled = currentStep <= 0;
+      }
+
+      // Set up event listeners once the DOM is fully loaded
+      document.addEventListener("DOMContentLoaded", function() {
+        // Start button - go to first step
+        document.getElementById("start-btn").addEventListener("click", goToStart);
+        
+        // Previous step button
+        document.getElementById("prev-step").addEventListener("click", prevStep);
+        
+        // Pause/Play button
+        document.getElementById("pause-animation").addEventListener("click", togglePause);
+        
+        // Next step button - ensure it uses isManual parameter
+        document.getElementById("next-step").addEventListener("click", function() {
+          if (currentStep < steps.length - 1) {
+            nextStep(true); // Pass true to indicate manual navigation
+          }
+        });
+        
+        // Finish button - skip to the end
+        document.getElementById("finish-btn").addEventListener("click", skipToFinish);
+        
+        // Initialize the visualization container
+        resetVisualization();
+        
+        // Initialize interactive inputs
+        createInteractiveArrayInputs();
+      });
+
+      // Add more CSS for better visual feedback
+      const extraStyles = document.createElement("style");
+      extraStyles.textContent = `
+        .paused {
+          position: relative;
+        }
+        .paused::after {
+          content: "PAUSED";
+          position: absolute;
+          top: 0;
+          right: 10px;
+          background-color: #ff9800;
+          color: white;
+          padding: 2px 8px;
+          border-radius: 3px;
+          font-size: 12px;
+          font-weight: bold;
+        }
+        .step-controls {
+          margin: 15px 0;
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          padding: 10px;
+          background-color: #f5f5f5;
+          border-radius: 5px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .step-controls button {
+          min-width: 100px;
+          font-weight: bold;
+          transition: all 0.2s;
+        }
+        .step-controls button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .step-controls button#pause-animation {
+          background-color: #4caf50;
+        }
+        .step-controls button#pause-animation.paused {
+          background-color: #ff9800;
+        }
+        .initial-state {
+          text-align: center;
+          padding: 30px;
+          color: #757575;
+          font-style: italic;
+        }
+      `;
+      document.head.appendChild(extraStyles);
+      
+      // Add these functions to the script
+      
+      // Parse input string to array of numbers
+      function parseInput(inputStr) {
+        // Replace commas with spaces and split by whitespace
+        return inputStr.replace(/,/g, ' ')
+                       .trim()
+                       .split(/\s+/)
+                       .filter(val => val !== '')
+                       .map(val => {
+                          const num = parseInt(val);
+                          if (isNaN(num)) {
+                            throw new Error(`"${val}" is not a valid number`);
+                          }
+                          return num;
+                       });
+      }
+      
+      // Validate input arrays
+      function validateInput(input) {
+        // For array inputs passed to validateInput(listA, 'A')
+        if (Array.isArray(input)) {
+          const arr = input;
+          const name = arguments[1] || "Array";
+          
+          if (arr.length === 0) {
+            throw new Error(`${name} cannot be empty`);
+          }
+          
+          const MIN_VAL = -1e9;
+          const MAX_VAL = 1e9;
+          
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i] < MIN_VAL || arr[i] > MAX_VAL) {
+              throw new Error(`Number at position ${i+1} in ${name} (${arr[i]}) is out of range. Values must be between -10^9 and 10^9.`);
+            }
+          }
+          
+          return true;
+        }
+      
+        // Safety check for undefined or null inputs
+        if (!input) return false;
+        if (typeof input.value === 'undefined') return false;
+        
+        const value = input.value.toString().trim();
+        
+        if (value === '') {
+          if (input.parentElement) {
+            input.parentElement.remove();
+          }
+          return true;
+        }
+        
+        // More strict validation - must be a valid integer
+        if (!/^-?\d+$/.test(value)) {
+          input.style.borderColor = '#f44336';
+          input.style.boxShadow = '0 0 5px rgba(244,67,54,0.5)';
+          input.title = "Must be a valid integer";
+          return false;
+        }
+        
+        const num = parseInt(value);
+        
+        // Range validation
+        const MIN_VAL = -1e9;
+        const MAX_VAL = 1e9;
+        if (num < MIN_VAL || num > MAX_VAL) {
+          input.style.borderColor = '#f44336';
+          input.style.boxShadow = '0 0 5px rgba(244,67,54,0.5)';
+          input.title = `Value must be between ${MIN_VAL} and ${MAX_VAL}`;
+          return false;
+        }
+        
+        // Valid input
+        input.style.borderColor = '#4caf50';
+        input.style.boxShadow = '0 0 5px rgba(76,175,80,0.5)';
+        input.title = 'Valid number';
+        input.value = num; // Normalize the display
+        
+        setTimeout(() => {
+          // Remove success indicators after 500ms
+          input.style.borderColor = '';
+          input.style.boxShadow = '';
+        }, 500);
+        
+        // Update hidden input
+        const container = input.closest('.array-input-container');
+        if (container) {
+          updateHiddenInput(container);
+        }
+        
+        return true;
+      }
+      
+      function updateHiddenInput(container) {
+        if (!container) return;
+        
+        const arrayId = container.id.split('-')[0]; // A-array-container -> A
+        if (!arrayId) return;
+        
+        const hiddenInput = document.getElementById(arrayId);
+        if (!hiddenInput) return;
+        
+        const values = [];
+        container.querySelectorAll('.array-input-item input').forEach(input => {
+          if (input && input.value && input.value.trim && input.value.trim() !== '') {
+            values.push(input.value.trim());
+          }
+        });
+        
+        hiddenInput.value = values.join(', ');
+      }
+      
+      // Function to sort a list
+      function sortList(listId) {
+        const textarea = document.getElementById(listId);
+        try {
+          const arr = parseInput(textarea.value);
+          validateInput(arr, listId);
+          
+          // Sort the array
+          arr.sort((a, b) => a - b);
+          
+          // Update the textarea with sorted array
+          textarea.value = arr.join(', ');
+          
+          // Ask if user wants to regenerate animation
+          if (steps.length > 0) {
+            if(confirm("Do you want to regenerate the animation with the sorted list?")) {
+              startAnimation();
+            }
+          }
+        } catch (error) {
+          alert(`Error: ${error.message}`);
+        }
+      }
+      
+      // Function to clear a list
+      function clearList(listId) {
+        document.getElementById(listId).value = '';
+      }
+      
+      // Update the startAnimation function to work with lists
+      function startAnimation() {
+        // Clear any existing animation
+        clearInterval(animationInterval);
+        isPaused = false;
+        
+        try {
+          // Parse input lists
+          const listA = parseInput(document.getElementById("A").value);
+          const listB = parseInput(document.getElementById("B").value);
+          
+          // Validate inputs
+          validateInput(listA, 'A');
+          validateInput(listB, 'B');
+          
+          // Reset UI controls
+          document.getElementById("pause-animation").textContent = "Pause";
+          document.getElementById("pause-animation").disabled = false;
+          document.getElementById("prev-step").disabled = true;
+          document.getElementById("next-step").disabled = true;
+          
+          // Build steps for visualization
+          let i = 0, j = 0;
+          let C = []; // Changed to array instead of string
+          steps = [];
+          
+          while (i < listA.length && j < listB.length) {
+            if (listA[i] < listB[j]) {
+              C.push(listA[i]); // Push to array instead of string concatenation
+              steps.push({
+                C: [...C], // Clone the array to avoid reference issues
+                A_pointer: i,
+                B_pointer: j,
+                selected: `A: ${listA[i]}`,
+                listA: [...listA],
+                listB: [...listB],
+                currentA: listA[i],
+                currentB: j < listB.length ? listB[j] : null
+              });
+              i++;
+            } else {
+              C.push(listB[j]); // Push to array instead of string concatenation
+              steps.push({
+                C: [...C], // Clone the array to avoid reference issues
+                A_pointer: i,
+                B_pointer: j,
+                selected: `B: ${listB[j]}`,
+                listA: [...listA],
+                listB: [...listB],
+                currentA: i < listA.length ? listA[i] : null,
+                currentB: listB[j]
+              });
+              j++;
+            }
+          }
+          
+          // Add remaining elements
+          if (i < listA.length) {
+            const remaining = listA.slice(i);
+            C.push(...remaining); // Push all remaining elements to array
+            steps.push({
+              C: [...C], // Clone the array
+              A_pointer: listA.length,
+              B_pointer: j,
+              selected: `A (remaining): ${remaining.join(', ')}`,
+              listA: [...listA],
+              listB: [...listB],
+              currentA: null,
+              currentB: null
+            });
+          }
+          
+          if (j < listB.length) {
+            const remaining = listB.slice(j);
+            C.push(...remaining); // Push all remaining elements to array
+            steps.push({
+              C: [...C], // Clone the array
+              A_pointer: i,
+              B_pointer: listB.length,
+              selected: `B (remaining): ${remaining.join(', ')}`,
+              listA: [...listA],
+              listB: [...listB],
+              currentA: null,
+              currentB: null
+            });
+          }
+          
+          currentStep = 0;
+          displayStep();
+          updateProgressTracker();
+          const speedValue = document.getElementById("speed").value;
+          animationInterval = setInterval(nextStep, speedValue);
+          
+          // Auto-scroll to the animation section
+          setTimeout(() => {
+            document.getElementById("visualization").scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start'
+            });
+          }, 100);
+        } catch (error) {
+          alert(`Error: ${error.message}`);
+        }
+      }
+      
+      // Update the displayStep function to show list elements
+      function displayStep() {
+        const visualization = document.getElementById("visualization");
+        visualization.innerHTML = "<h2>Merging Process:</h2>";
+        
+        if (steps.length === 0) return;
+        
+        const step = steps[currentStep];
+        const stepDiv = document.createElement("div");
+        stepDiv.className = "step active";
+        
+        // Create visual representation of arrays
+        let listAHtml = '<div class="array-container">';
+        step.listA.forEach((num, idx) => {
+          const isPointer = idx === step.A_pointer;
+          const isSelected = idx === step.A_pointer && step.currentA !== null;
+          listAHtml += `<div class="array-item ${isPointer ? 'pointer' : ''} ${isSelected ? 'selected' : ''}">${num}</div>`;
+        });
+        listAHtml += '</div>';
+        
+        let listBHtml = '<div class="array-container">';
+        step.listB.forEach((num, idx) => {
+          const isPointer = idx === step.B_pointer;
+          const isSelected = idx === step.B_pointer && step.currentB !== null;
+          listBHtml += `<div class="array-item ${isPointer ? 'pointer' : ''} ${isSelected ? 'selected' : ''}">${num}</div>`;
+        });
+        listBHtml += '</div>';
+        
+        // Create visual representation of result array C
+        let resultCHtml = '<div class="array-container result-container">';
+        
+        // Handle both string and array formats for backward compatibility
+        if (Array.isArray(step.C)) {
+          step.C.forEach((num, idx) => {
+            // Highlight the latest added item
+            const isLatest = idx === step.C.length - 1;
+            resultCHtml += `<div class="array-item ${isLatest ? 'latest-added' : ''}">${num}</div>`;
+          });
+        } else {
+          // Handle C as a string (legacy format)
+          const cArray = step.C.split('');
+          cArray.forEach((char, idx) => {
+            const isLatest = idx === cArray.length - 1;
+            resultCHtml += `<div class="array-item ${isLatest ? 'latest-added' : ''}">${char}</div>`;
+          });
+        }
+        
+        resultCHtml += '</div>';
+        
+        stepDiv.innerHTML = `
+          <strong>Step ${currentStep + 1}:</strong><br>
+          <div class="step-details">
+            <p>Selected: ${step.selected}</p>
+            <div class="arrays">
+              <div class="array-row">
+                <span class="array-label">A:</span>
+                ${listAHtml}
+              </div>
+              <div class="array-row">
+                <span class="array-label">B:</span>
+                ${listBHtml}
+              </div>
+            </div>
+            <div class="result-section">
+              <p class="result-label">Current C:</p>
+              ${resultCHtml}
+            </div>
+          </div>
+        `;
+        
+        visualization.appendChild(stepDiv);
+      }
+
+      // Add these styles for array visualization
+      const arrayStyles = document.createElement("style");
+      arrayStyles.textContent = `
+        .step-details {
+          margin: 15px 0;
+        }
+        .arrays {
+          margin: 15px 0;
+        }
+        .array-row {
+          display: flex;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+        .array-label {
+          font-weight: bold;
+          width: 30px;
+        }
+        .array-container {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+        }
+        .array-item {
+          display: inline-block;
+          min-width: 60px; /* Increased width from 50px to 60px */
+          height: 50px;
+          line-height: 50px;
+          text-align: center;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          background-color: #f5f5f5;
+          padding: 0 10px; /* Increased padding from 8px to 10px */
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .array-item.pointer {
+          border: 2px solid #e74c3c;
+          font-weight: bold;
+        }
+        .array-item.selected {
+          background-color: #e0f7fa;
+          border-color: #00acc1;
+          animation: pulse 1s infinite;
+        }
+        .latest-added {
+          background-color: #dcedc8;
+          border-color: #8bc34a;
+          font-weight: bold;
+        }
+        .result-section {
+          margin-top: 30px;
+          padding-top: 15px;
+          border-top: 1px dashed #ccc;
+        }
+        .result-label {
+          font-weight: bold;
+          font-size: 1.1em;
+          margin-bottom: 10px;
+        }
+        .result-container {
+          padding: 10px;
+          background-color: #f9f9f9;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+        }
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(0,172,193,0.5); }
+          70% { box-shadow: 0 0 0 8px rgba(0,172,193,0); }
+          100% { box-shadow: 0 0 0 0 rgba(0,172,193,0); }
+        }
+      `;
+      document.head.appendChild(arrayStyles);
+      
+      // Create interactive array inputs
+      function createInteractiveArrayInputs() {
+        const arrayContainers = document.querySelectorAll('.array-input-container');
+        arrayContainers.forEach(container => {
+          const addButton = container.querySelector('.add-item-btn');
+          if(addButton) {
+            addButton.addEventListener('click', () => addArrayItem(container));
+          }
+        });
+        
+        // Initialize with empty arrays
+        initArrayContainer('A');
+        initArrayContainer('B');
+      }
+      
+      function initArrayContainer(arrayId) {
+        const container = document.getElementById(`${arrayId}-array-container`);
+        if (!container) return;
+        
+        // Clear container safely
+        container.innerHTML = '';
+        
+        // Add the "+" button
+        const addButton = document.createElement('div');
+        addButton.className = 'add-item-btn';
+        addButton.innerHTML = '+';
+        addButton.addEventListener('click', () => addArrayItem(container));
+        
+        container.appendChild(addButton);
+        
+        // Also clear the hidden textarea
+        const hiddenInput = document.getElementById(arrayId);
+        if (hiddenInput) hiddenInput.value = '';
+      }
+      
+      function addArrayItem(container, value = '') {
+        if (!container) return;
+        
+        const addButton = container.querySelector('.add-item-btn');
+        if (!addButton) return;
+        
+        const item = document.createElement('div');
+        item.className = 'array-input-item';
+        
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = value;
+        input.placeholder = '?';
+        
+        // Real-time validation
+        input.addEventListener('input', (e) => {
+          const value = e.target.value.trim();
+          
+          // Allow empty or minus sign while typing
+          if (value === '' || value === '-') return;
+          
+          // Real-time format validation - only allow integers
+          if (!/^-?\d+$/.test(value)) {
+            input.style.borderColor = '#f44336';
+            input.style.boxShadow = '0 0 5px rgba(244,67,54,0.5)';
+            input.title = "Must be a valid integer";
+          } else {
+            const num = parseInt(value);
+            const MIN_VAL = -1e9;
+            const MAX_VAL = 1e9;
+            
+            if (num < MIN_VAL || num > MAX_VAL) {
+              input.style.borderColor = '#f44336';
+              input.style.boxShadow = '0 0 5px rgba(244,67,54,0.5)';
+              input.title = `Value must be between ${MIN_VAL} and ${MAX_VAL}`;
+            } else {
+              input.style.borderColor = '#4caf50';
+              input.style.boxShadow = '0 0 5px rgba(76,175,80,0.3)';
+              input.title = 'Valid number';
+            }
+          }
+        });
+        
+        input.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            const isValid = validateInput(e.target);
+            if (isValid) {
+              // Wait a moment for the DOM to update before adding new item
+              setTimeout(() => addArrayItem(container), 10);
+            }
+          }
+        });
+        
+        input.addEventListener('blur', () => {
+          validateInput(input);
+        });
+        
+        const removeBtn = document.createElement('div');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '×';
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          item.remove();
+          updateHiddenInput(container);
+        });
+        
+        item.appendChild(input);
+        item.appendChild(removeBtn);
+        
+        // Insert before the "+" button
+        container.insertBefore(item, addButton);
+        
+        // Focus on the new input after a short delay
+        setTimeout(() => {
+          input.focus();
+        }, 10);
+        
+        // Update the hidden textarea
+        updateHiddenInput(container);
+      }
+      
+      function validateInput(input) {
+        // For array inputs passed to validateInput(listA, 'A')
+        if (Array.isArray(input)) {
+          const arr = input;
+          const name = arguments[1] || "Array";
+          
+          if (arr.length === 0) {
+            throw new Error(`${name} cannot be empty`);
+          }
+          
+          const MIN_VAL = -1e9;
+          const MAX_VAL = 1e9;
+          
+          for (let i = 0; i < arr.length; i++) {
+            if (arr[i] < MIN_VAL || arr[i] > MAX_VAL) {
+              throw new Error(`Number at position ${i+1} in ${name} (${arr[i]}) is out of range. Values must be between -10^9 and 10^9.`);
+            }
+          }
+          
+          return true;
+        }
+      
+        // Safety check for undefined or null inputs
+        if (!input) return false;
+        if (typeof input.value === 'undefined') return false;
+        
+        const value = input.value.toString().trim();
+        
+        if (value === '') {
+          if (input.parentElement) {
+            input.parentElement.remove();
+          }
+          return true;
+        }
+        
+        // More strict validation - must be a valid integer
+        if (!/^-?\d+$/.test(value)) {
+          input.style.borderColor = '#f44336';
+          input.style.boxShadow = '0 0 5px rgba(244,67,54,0.5)';
+          input.title = "Must be a valid integer";
+          return false;
+        }
+        
+        const num = parseInt(value);
+        
+        // Range validation
+        const MIN_VAL = -1e9;
+        const MAX_VAL = 1e9;
+        if (num < MIN_VAL || num > MAX_VAL) {
+          input.style.borderColor = '#f44336';
+          input.style.boxShadow = '0 0 5px rgba(244,67,54,0.5)';
+          input.title = `Value must be between ${MIN_VAL} and ${MAX_VAL}`;
+          return false;
+        }
+        
+        // Valid input
+        input.style.borderColor = '#4caf50';
+        input.style.boxShadow = '0 0 5px rgba(76,175,80,0.5)';
+        input.title = 'Valid number';
+        input.value = num; // Normalize the display
+        
+        setTimeout(() => {
+          // Remove success indicators after 500ms
+          input.style.borderColor = '';
+          input.style.boxShadow = '';
+        }, 500);
+        
+        // Update hidden input
+        const container = input.closest('.array-input-container');
+        if (container) {
+          updateHiddenInput(container);
+        }
+        
+        return true;
+      }
+      
+      function updateHiddenInput(container) {
+        if (!container) return;
+        
+        const arrayId = container.id.split('-')[0]; // A-array-container -> A
+        if (!arrayId) return;
+        
+        const hiddenInput = document.getElementById(arrayId);
+        if (!hiddenInput) return;
+        
+        const values = [];
+        container.querySelectorAll('.array-input-item input').forEach(input => {
+          if (input && input.value && input.value.trim && input.value.trim() !== '') {
+            values.push(input.value.trim());
+          }
+        });
+        
+        hiddenInput.value = values.join(', ');
+      }
+      
+      function generateRandomArray(arrayId, size = 5) {
+        const container = document.getElementById(`${arrayId}-array-container`);
+        if (!container) return;
+        
+        // Save the add button if it exists
+        const existingAddButton = container.querySelector('.add-item-btn');
+        
+        // Clear current items except add button
+        const items = container.querySelectorAll('.array-input-item');
+        items.forEach(item => item.remove());
+        
+        // Generate random numbers
+        const MIN_VAL = -100;
+        const MAX_VAL = 100;
+        const randomSize = Math.min(Math.max(parseInt(size) || 5, 1), 20); // Limit size between 1-20
+        
+        for (let i = 0; i < randomSize; i++) {
+          const randomValue = Math.floor(Math.random() * (MAX_VAL - MIN_VAL + 1)) + MIN_VAL;
+          addArrayItem(container, randomValue);
+        }
+        
+        // If we didn't have an add button before or it was removed accidentally, create a new one
+        if (!container.querySelector('.add-item-btn')) {
+          const addButton = document.createElement('div');
+          addButton.className = 'add-item-btn';
+          addButton.innerHTML = '+';
+          addButton.addEventListener('click', () => addArrayItem(container));
+          container.appendChild(addButton);
+        }
+        
+        // Update the corresponding hidden textarea
+        updateHiddenInput(container);
+      }
+      
+      function sortArrayInput(arrayId) {
+        const container = document.getElementById(`${arrayId}-array-container`);
+        if (!container) return;
+        
+        const values = [];
+        
+        // Collect all values
+        container.querySelectorAll('.array-input-item input').forEach(input => {
+          if (input && input.value && !isNaN(parseInt(input.value.trim()))) {
+            values.push(parseInt(input.value.trim()));
+          }
+        });
+        
+        if (values.length === 0) return; // Nothing to sort
+        
+        // Save the add button reference
+        const addButton = container.querySelector('.add-item-btn');
+        
+        // Remove only the array items, not the add button
+        const items = container.querySelectorAll('.array-input-item');
+        items.forEach(item => item.remove());
+        
+        // Sort values
+        values.sort((a, b) => a - b);
+        
+        // Add sorted values back
+        values.forEach(value => {
+          addArrayItem(container, value);
+        });
+        
+        // If we somehow lost the add button, create a new one
+        if (!container.querySelector('.add-item-btn')) {
+          const newAddButton = document.createElement('div');
+          newAddButton.className = 'add-item-btn';
+          newAddButton.innerHTML = '+';
+          newAddButton.addEventListener('click', () => addArrayItem(container));
+          container.appendChild(newAddButton);
+        }
+        
+        // Update the corresponding hidden textarea
+        updateHiddenInput(container);
+        
+        // If animation is running, ask if user wants to restart
+        if (steps.length > 0) {
+          if(confirm("Do you want to regenerate the animation with the sorted list?")) {
+            startAnimation();
+          }
+        }
+      }
+    </script>
+  </body>
+</html>
