@@ -3,6 +3,12 @@
  * Contains functions for array manipulation, validation and interactive array inputs
  */
 
+// Global validation state
+let validationState = {
+  A: { valid: false, errorMessages: [] },
+  B: { valid: false, errorMessages: [] }
+};
+
 // Interactive array input functions
 function createInteractiveArrayInputs() {
   initArrayContainer('A');
@@ -31,6 +37,11 @@ function initArrayContainer(id) {
   // Clear the hidden textarea
   const textarea = document.getElementById(id);
   if (textarea) textarea.value = '';
+  
+  // Initialize validation state 
+  validationState[id] = { valid: false, errorMessages: [`List ${id} has empty values. Please enter valid numbers.`] };
+  updateValidationMessage(id);
+  updatePlayButtonState();
 }
 
 function addArrayItem(id, value = '') {
@@ -51,12 +62,25 @@ function addArrayItem(id, value = '') {
   input.placeholder = '#';
   
   // Add event listeners
-  input.addEventListener('input', () => validateInput(input));
+  input.addEventListener('input', () => {
+    validateInput(input);
+    updateHiddenInput(container);
+  });
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      addArrayItem(id);
+      if (validateInput(input)) {
+        addArrayItem(id);
+      } else {
+        // Display more prominent error if trying to add with invalid input
+        input.classList.add('input-error-highlight');
+        setTimeout(() => input.classList.remove('input-error-highlight'), 1000);
+      }
     }
+  });
+  input.addEventListener('blur', () => {
+    // Re-validate on focus out
+    validateInput(input);
   });
   
   // Create remove button
@@ -67,6 +91,8 @@ function addArrayItem(id, value = '') {
     e.stopPropagation();
     item.remove();
     updateHiddenInput(container);
+    // Re-validate the container after removing an item
+    validateArrayContainer(id);
   };
   
   // Append elements
@@ -79,10 +105,16 @@ function addArrayItem(id, value = '') {
   // Focus on the new input
   if (value === '') {
     setTimeout(() => input.focus(), 0);
+  } else {
+    // Validate the input if it has a value
+    validateInput(input);
   }
   
   // Update hidden textarea
   updateHiddenInput(container);
+  
+  // Validate the entire container
+  validateArrayContainer(id);
 }
 
 function updateHiddenInput(container) {
@@ -123,6 +155,12 @@ function generateRandomArray(id, size) {
     const value = Math.floor(Math.random() * 201) - 100;
     addArrayItem(id, value);
   }
+  
+  // Update validation state
+  validationState[id].valid = true;
+  validationState[id].errorMessages = [];
+  updateValidationMessage(id);
+  updatePlayButtonState();
 }
 
 function sortArrayInput(id) {
@@ -131,12 +169,28 @@ function sortArrayInput(id) {
   
   // Get current values
   const values = [];
+  let allValid = true;
+  
   container.querySelectorAll('.array-input-item input').forEach(input => {
     if (input && input.value && input.value.trim() !== '') {
       const val = parseInt(input.value.trim());
-      if (!isNaN(val)) values.push(val);
+      if (!isNaN(val)) {
+        values.push(val);
+      } else {
+        allValid = false;
+      }
     }
   });
+  
+  if (!allValid) {
+    alert(`Cannot sort list ${id}. Please fix invalid entries first.`);
+    return;
+  }
+  
+  if (values.length === 0) {
+    alert(`List ${id} is empty. Nothing to sort.`);
+    return;
+  }
   
   // Sort numerically
   values.sort((a, b) => a - b);
@@ -147,6 +201,14 @@ function sortArrayInput(id) {
   
   // Add sorted items
   values.forEach(val => addArrayItem(id, val));
+  
+  // Set validation state after sorting
+  if (values.length > 0) {
+    validationState[id].valid = true;
+    validationState[id].errorMessages = [];
+    updateValidationMessage(id);
+    updatePlayButtonState();
+  }
 }
 
 // Parse input string to array of numbers
@@ -193,19 +255,27 @@ function validateInput(input) {
   if (typeof input.value === 'undefined') return false;
   
   const value = input.value.toString().trim();
+  const arrayContainer = input.closest('.array-input-container');
+  const arrayId = arrayContainer ? arrayContainer.id.split('-')[0] : null; // Get 'A' or 'B'
+  
+  // Get the position of the current input in its container for better error messages
+  let inputPosition = 0;
+  if (arrayContainer) {
+    const inputs = Array.from(arrayContainer.querySelectorAll('.array-input-item input'));
+    inputPosition = inputs.indexOf(input) + 1;
+  }
   
   if (value === '') {
     if (input.parentElement) {
       input.parentElement.remove();
+      validateArrayContainer(arrayId);
     }
     return true;
   }
   
   // More strict validation - must be a valid integer
   if (!/^-?\d+$/.test(value)) {
-    input.style.borderColor = '#f44336';
-    input.style.boxShadow = '0 0 5px rgba(244,67,54,0.5)';
-    input.title = "Must be a valid integer";
+    markInputInvalid(input, `Must be a valid integer`, `Element ${inputPosition} is not a valid integer. Please enter a whole number.`, arrayId);
     return false;
   }
   
@@ -215,23 +285,19 @@ function validateInput(input) {
   const MIN_VAL = -1e9;
   const MAX_VAL = 1e9;
   if (num < MIN_VAL || num > MAX_VAL) {
-    input.style.borderColor = '#f44336';
-    input.style.boxShadow = '0 0 5px rgba(244,67,54,0.5)';
-    input.title = `Value must be between ${MIN_VAL} and ${MAX_VAL}`;
+    markInputInvalid(input, `Value must be between ${MIN_VAL} and ${MAX_VAL}`, 
+      `Element ${inputPosition} (${num}) is out of the allowed range. Please enter a number between -10^9 and 10^9.`, arrayId);
     return false;
   }
   
   // Valid input
-  input.style.borderColor = '#4caf50';
-  input.style.boxShadow = '0 0 5px rgba(76,175,80,0.5)';
-  input.title = 'Valid number';
+  markInputValid(input, 'Valid number');
   input.value = num; // Normalize the display
   
-  setTimeout(() => {
-    // Remove success indicators after 500ms
-    input.style.borderColor = '';
-    input.style.boxShadow = '';
-  }, 500);
+  // Check the entire array container for validation
+  if (arrayId) {
+    validateArrayContainer(arrayId);
+  }
   
   // Update hidden input
   const container = input.closest('.array-input-container');
@@ -240,4 +306,147 @@ function validateInput(input) {
   }
   
   return true;
+}
+
+// Mark an input as invalid with tooltip and error message
+function markInputInvalid(input, tooltipMessage, errorMessage, arrayId) {
+  // Apply visual styling
+  input.style.borderColor = '#f44336';
+  input.style.boxShadow = '0 0 5px rgba(244,67,54,0.5)';
+  input.title = tooltipMessage;
+  input.classList.add('invalid');
+  
+  // If this is part of an array with an ID, update the validation state
+  if (arrayId && (arrayId === 'A' || arrayId === 'B')) {
+    // Add error message if it doesn't exist already
+    if (!validationState[arrayId].errorMessages.includes(errorMessage)) {
+      validationState[arrayId].errorMessages.push(errorMessage);
+    }
+    validationState[arrayId].valid = false;
+    
+    // Update validation message display
+    updateValidationMessage(arrayId);
+  }
+  
+  // Disable play button if any input is invalid
+  updatePlayButtonState();
+}
+
+// Mark an input as valid
+function markInputValid(input, tooltipMessage) {
+  // Apply visual styling
+  input.style.borderColor = '#4caf50';
+  input.style.boxShadow = '0 0 5px rgba(76,175,80,0.5)';
+  input.title = tooltipMessage || 'Valid number';
+  input.classList.remove('invalid');
+  
+  // We don't immediately update validation state here
+  // as we need to check all inputs in the container
+}
+
+// Validate an entire array container
+function validateArrayContainer(arrayId) {
+  if (!arrayId || (arrayId !== 'A' && arrayId !== 'B')) return;
+  
+  const container = document.getElementById(`${arrayId}-array-container`);
+  if (!container) return;
+  
+  // Reset validation state for this array
+  validationState[arrayId] = { valid: true, errorMessages: [] };
+  
+  // Check if the array has any inputs
+  const inputs = container.querySelectorAll('.array-input-item input');
+  if (inputs.length === 0) {
+    validationState[arrayId].valid = false;
+    validationState[arrayId].errorMessages.push(`List ${arrayId} is empty. Please add at least one number.`);
+    updateValidationMessage(arrayId);
+    updatePlayButtonState();
+    return;
+  }
+  
+  // Check each input
+  let position = 1;
+  inputs.forEach(input => {
+    const value = input.value.toString().trim();
+    
+    // Empty value check
+    if (value === '') {
+      markInputInvalid(input, 'Value cannot be empty', 
+        `Element ${position} in List ${arrayId} is empty. Please enter a valid number.`, arrayId);
+    }
+    // Integer check
+    else if (!/^-?\d+$/.test(value)) {
+      markInputInvalid(input, 'Must be a valid integer', 
+        `Element ${position} in List ${arrayId} is not a valid integer. Please enter a whole number.`, arrayId);
+    }
+    // Range check
+    else {
+      const num = parseInt(value);
+      const MIN_VAL = -1e9;
+      const MAX_VAL = 1e9;
+      if (num < MIN_VAL || num > MAX_VAL) {
+        markInputInvalid(input, `Value must be between ${MIN_VAL} and ${MAX_VAL}`, 
+          `Element ${position} (${num}) in List ${arrayId} is out of the allowed range. Please enter a number between -10^9 and 10^9.`, arrayId);
+      }
+    }
+    position++;
+  });
+  
+  // Update validation message display
+  updateValidationMessage(arrayId);
+  
+  // Update play button state
+  updatePlayButtonState();
+}
+
+// Update the validation message display for an array
+function updateValidationMessage(arrayId) {
+  // Find or create validation message container
+  let messageContainer = document.getElementById(`${arrayId}-validation-messages`);
+  if (!messageContainer) {
+    messageContainer = document.createElement('div');
+    messageContainer.id = `${arrayId}-validation-messages`;
+    messageContainer.className = 'validation-messages';
+    
+    const container = document.getElementById(`${arrayId}-array-container`);
+    if (container && container.parentNode) {
+      container.parentNode.insertBefore(messageContainer, container.nextSibling);
+    }
+  }
+  
+  // Display validation status
+  if (validationState[arrayId].valid) {
+    messageContainer.innerHTML = '<div class="validation-success">✓ Input is valid</div>';
+    messageContainer.classList.remove('has-errors');
+  } else {
+    let messages = validationState[arrayId].errorMessages.map(msg => 
+      `<li><span class="error-icon">⚠️</span> ${msg}</li>`).join('');
+    
+    messageContainer.innerHTML = `
+      <div class="validation-error">
+        <strong>Please fix the following issues:</strong>
+        <ul>${messages}</ul>
+      </div>
+    `;
+    messageContainer.classList.add('has-errors');
+  }
+}
+
+// Update the state of the play button based on validation
+function updatePlayButtonState() {
+  const playButton = document.getElementById('play-button');
+  if (!playButton) return;
+  
+  // Disable button if any array has validation errors
+  const isValid = validationState.A.valid && validationState.B.valid;
+  
+  if (isValid) {
+    playButton.disabled = false;
+    playButton.title = "Generate visualization and start animation";
+    playButton.classList.remove('disabled');
+  } else {
+    playButton.disabled = true;
+    playButton.title = "Please fix the validation errors before starting";
+    playButton.classList.add('disabled');
+  }
 }

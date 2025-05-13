@@ -16,7 +16,23 @@ function startAnimation() {
   isPaused = false;
   
   try {
-    // Use the values from interactive inputs
+    // Check if both arrays are valid first
+    if (!validationState.A.valid || !validationState.B.valid) {
+      // Show which list has issues
+      let errorMessage = "Please fix validation errors before starting:";
+      
+      if (!validationState.A.valid) {
+        errorMessage += "\n- List A: " + validationState.A.errorMessages.join("; ");
+      }
+      
+      if (!validationState.B.valid) {
+        errorMessage += "\n- List B: " + validationState.B.errorMessages.join("; ");
+      }
+      
+      throw new Error(errorMessage);
+    }
+    
+    // Use the values from interactive inputs (which are now validated)
     let listA = [];
     let listB = [];
     
@@ -39,11 +55,13 @@ function startAnimation() {
       });
     }
     
-    // Validation
+    // Double-check validation with the parsed arrays
     if (!listA || listA.length === 0) {
+      validateArrayContainer('A'); // Force update the validation state
       throw new Error("List A cannot be empty. Please add at least one number.");
     }
     if (!listB || listB.length === 0) {
+      validateArrayContainer('B'); // Force update the validation state
       throw new Error("List B cannot be empty. Please add at least one number.");
     }
     

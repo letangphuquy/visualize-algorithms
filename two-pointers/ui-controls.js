@@ -25,6 +25,13 @@ function initializeApp() {
   
   // Reset the visualization to initial state
   resetVisualization();
+  
+  // Initialize validation state for both arrays
+  validateArrayContainer('A');
+  validateArrayContainer('B');
+  
+  // Disable play button initially until input is valid
+  updatePlayButtonState();
 }
 
 // Create step navigation controls
