@@ -431,6 +431,25 @@ textarea {
   animation: pulse 1s infinite;
 }
 
+/* Make the unselected pointer dimmer */
+.array-item.pointer.dimmed {
+  background-color: #ffe0d6;
+  border-color: #ff8a65;
+  opacity: 0.6;
+  animation: none;
+}
+
+/* Make the selected pointer more outstanding */
+.array-item.pointer.outstanding {
+  background-color: #ff5722;
+  color: white;
+  border-color: #bf360c;
+  transform: scale(1.1);
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(255, 87, 34, 0.8);
+  z-index: 2;
+}
+
 .result-container {
   margin-top: 15px;
 }
@@ -444,4 +463,112 @@ textarea {
   background-color: #c8e6c9;
   border-color: #388e3c;
   animation: pulse 1s infinite;
+}
+
+/* Style for the remaining elements added all at once */
+.remaining-element {
+  background-color: #bbdefb;
+  border-color: #1976d2;
+  animation: pulse 1s infinite;
+}
+
+/* New styles for step explanations and transitions */
+
+/* Step explanation styles */
+.step-explanation {
+  background-color: #e8f5e9;
+  border-radius: 8px;
+  padding: 10px 15px;
+  margin: 10px 0 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.step-explanation ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.explanation-line {
+  padding: 5px;
+  margin: 5px 0;
+  border-radius: 4px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  font-weight: bold;
+  color: #263238;
+}
+
+.explanation-line.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.step-header {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+/* Transition effects for array items */
+.array-item.prev-pointer {
+  position: relative;
+}
+
+.array-item.was-selected {
+  animation: fadeOutAndUp 0.5s forwards;
+}
+
+.array-item.comparing {
+  background-color: #ffe57f;
+  border-color: #ffc107;
+  transform: scale(1.05);
+  z-index: 1;
+  box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+.array-item.to-be-selected {
+  background-color: #b3e5fc;
+  border-color: #039be5;
+  animation: pulse 2s infinite;
+}
+
+@keyframes fadeOutAndUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0.5;
+    transform: translateY(-10px) scale(0.95);
+  }
+}
+
+/* Add a transition showing element moving to array C */
+.array-item.was-selected::after {
+  content: "➡️";
+  position: absolute;
+  top: 50%;
+  right: -25px;
+  transform: translateY(-50%);
+  font-size: 18px;
+  animation: moveRight 0.7s forwards;
+  opacity: 0;
+}
+
+@keyframes moveRight {
+  0% {
+    opacity: 0;
+    right: -15px;
+  }
+  50% {
+    opacity: 1;
+    right: -25px;
+  }
+  100% {
+    opacity: 0;
+    right: -35px;
+  }
 }

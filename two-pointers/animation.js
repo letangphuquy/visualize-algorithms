@@ -58,72 +58,202 @@ function startAnimation() {
     document.getElementById("pause-animation").disabled = false;
     document.getElementById("prev-step").disabled = true;
     document.getElementById("next-step").disabled = true;
-    
-    // Build steps for visualization
+      // Build steps for visualization
     let i = 0, j = 0;
     let C = [];
     steps = [];
     
-    while (i < listA.length && j < listB.length) {
-      if (listA[i] < listB[j]) {
-        C.push(listA[i]);
-        steps.push({
-          C: [...C],
-          A_pointer: i,
-          B_pointer: j,
-          selected: `A: ${listA[i]}`,
-          listA: [...listA],
-          listB: [...listB],
-          currentA: listA[i],
-          currentB: j < listB.length ? listB[j] : null
-        });
-        i++;
-      } else {
-        C.push(listB[j]);
-        steps.push({
-          C: [...C],
-          A_pointer: i,
-          B_pointer: j,
-          selected: `B: ${listB[j]}`,
-          listA: [...listA],
-          listB: [...listB],
-          currentA: i < listA.length ? listA[i] : null,
-          currentB: listB[j]
-        });
-        j++;
-      }
-    }
+    // Add initial step to show the starting state
+    steps.push({
+      C: [],
+      A_pointer: 0,
+      B_pointer: 0,
+      listA: [...listA],
+      listB: [...listB],
+      currentA: listA[0],
+      currentB: listB[0],
+      explanation: [
+        "Starting the merge process",
+        "Pointers initialized at the beginning of both arrays",
+        "Result array C is empty"
+      ],
+      action: "initialize",
+      fromArray: null,
+      prevPointerA: null,
+      prevPointerB: null
+    });
     
-    // Add each remaining element as a separate step
-    while (i < listA.length) {
-      C.push(listA[i]);
+    while (i < listA.length && j < listB.length) {
+      // First add a comparison step
       steps.push({
         C: [...C],
         A_pointer: i,
         B_pointer: j,
-        selected: `A: ${listA[i]}`,
         listA: [...listA],
         listB: [...listB],
         currentA: listA[i],
-        currentB: null
+        currentB: listB[j],
+        explanation: [
+          `Comparing A[${i}] and B[${j}]`,
+          `A[${i}] = ${listA[i]}, B[${j}] = ${listB[j]}`,
+          listA[i] < listB[j] ? 
+            `Since ${listA[i]} < ${listB[j]}, we'll select from A` : 
+            `Since ${listB[j]} <= ${listA[i]}, we'll select from B`
+        ],
+        action: "compare",
+        fromArray: null,
+        prevPointerA: i,
+        prevPointerB: j
       });
-      i++;
-    }
-    
-    while (j < listB.length) {
-      const remaining = listB.slice(j);
-      C.push(...remaining); // Push all remaining elements to array
+      
+      if (listA[i] < listB[j]) {
+        C.push(listA[i]);
+        const prevI = i; // Store current position before incrementing
+        i++;
+        
+        // Then add a selection/movement step
+        steps.push({
+          C: [...C],
+          A_pointer: i,
+          B_pointer: j,
+          listA: [...listA],
+          listB: [...listB],
+          currentA: i < listA.length ? listA[i] : null,
+          currentB: listB[j],
+          explanation: [
+            `Selected A[${prevI}] = ${listA[prevI]}`,
+            `Appended ${listA[prevI]} to C`,
+            `Advanced A pointer from ${prevI} to ${i}`
+          ],
+          action: "select",
+          fromArray: "A",
+          prevPointerA: prevI,
+          prevPointerB: j,
+          selectedValue: listA[prevI]
+        });
+      } else {
+        C.push(listB[j]);
+        const prevJ = j; // Store current position before incrementing
+        j++;
+        
+        // Then add a selection/movement step
+        steps.push({
+          C: [...C],
+          A_pointer: i,
+          B_pointer: j,
+          listA: [...listA],
+          listB: [...listB],
+          currentA: listA[i],
+          currentB: j < listB.length ? listB[j] : null,
+          explanation: [
+            `Selected B[${prevJ}] = ${listB[prevJ]}`,
+            `Appended ${listB[prevJ]} to C`,
+            `Advanced B pointer from ${prevJ} to ${j}`
+          ],
+          action: "select",
+          fromArray: "B",
+          prevPointerA: i,
+          prevPointerB: prevJ,
+          selectedValue: listB[prevJ]
+        });
+      }
+    }    // Add remaining elements from array A, if any
+    if (i < listA.length) {
+      // First add an explanation step
       steps.push({
-        C: [...C], // Clone the array
+        C: [...C],
         A_pointer: i,
-        B_pointer: listB.length,
-        selected: `B (remaining): ${remaining.join(', ')}`,
+        B_pointer: j,
+        listA: [...listA],
+        listB: [...listB],
+        currentA: listA[i],
+        currentB: null,
+        explanation: [
+          `Array B is exhausted`,
+          `${listA.length - i} elements remaining in A`,
+          `We'll append all remaining elements from A to C`
+        ],
+        action: "remaining-start",
+        fromArray: "A",
+        prevPointerA: i,
+        prevPointerB: j
+      });
+      
+      const remaining = listA.slice(i);
+      C.push(...remaining); // Push all remaining elements to array at once
+      
+      // Then add the step showing all remaining elements added
+      steps.push({
+        C: [...C],
+        A_pointer: listA.length,
+        B_pointer: j,
         listA: [...listA],
         listB: [...listB],
         currentA: null,
-        currentB: null
+        currentB: null,
+        explanation: [
+          `Added ${remaining.length} elements from A: ${remaining.join(', ')}`,
+          `All elements have been merged into C`,
+          `Merge complete`
+        ],
+        action: "remaining-end",
+        fromArray: "A",
+        remainingIndices: Array.from({length: remaining.length}, (_, idx) => C.length - remaining.length + idx), // Indices in C for highlighting
+        prevPointerA: i,
+        prevPointerB: j
       });
-      j++;
+    }
+    
+    // Add remaining elements from array B, if any
+    if (j < listB.length) {
+      // First add an explanation step
+      steps.push({
+        C: [...C],
+        A_pointer: i,
+        B_pointer: j,
+        listA: [...listA],
+        listB: [...listB],
+        currentA: null,
+        currentB: listB[j],
+        explanation: [
+          `Array A is exhausted`,
+          `${listB.length - j} elements remaining in B`,
+          `We'll append all remaining elements from B to C`
+        ],
+        action: "remaining-start",
+        fromArray: "B",
+        prevPointerA: i,
+        prevPointerB: j
+      });
+      
+      const remaining = listB.slice(j);
+      C.push(...remaining); // Push all remaining elements to array at once
+      
+      // Then add the step showing all remaining elements added
+      steps.push({
+        C: [...C],
+        A_pointer: i,
+        B_pointer: listB.length,
+        listA: [...listA],
+        listB: [...listB],
+        currentA: null,
+        currentB: null,
+        explanation: [
+          `Added ${remaining.length} elements from B: ${remaining.join(', ')}`,
+          `All elements have been merged into C`,
+          `Merge complete`
+        ],
+        action: "remaining-end",
+        fromArray: "B",
+        remainingIndices: Array.from({length: remaining.length}, (_, idx) => C.length - remaining.length + idx), // Indices in C for highlighting
+        prevPointerA: i,
+        prevPointerB: j
+      });
+    }
+    
+    // If both arrays are already exhausted (edge case)
+    if (i >= listA.length && j >= listB.length && steps.length > 0) {
+      steps[steps.length-1].explanation.push("Merge complete");
     }
     
     currentStep = 0;
@@ -154,37 +284,116 @@ function displayStep() {
   const step = steps[currentStep];
   const stepDiv = document.createElement("div");
   stepDiv.className = "step active";
+
+  // Get the transition type to apply appropriate visual effects
+  const action = step.action || '';
+  const fromArray = step.fromArray || '';
   
   // Create visual representation of arrays
   let listAHtml = '<div class="array-container">';
   step.listA.forEach((num, idx) => {
+    // Basic pointer checks
     const isPointer = idx === step.A_pointer;
-    const isSelected = idx === step.A_pointer && step.currentA !== null;
-    listAHtml += `<div class="array-item ${isPointer ? 'pointer' : ''} ${isSelected ? 'selected' : ''}">${num}</div>`;
+    const isPrevPointer = step.prevPointerA !== null && idx === step.prevPointerA;
+    
+    // For transition effects
+    const wasSelected = isPrevPointer && step.fromArray === 'A';
+    const isSelected = (idx === step.A_pointer && step.currentA !== null) || 
+                      (action === 'remaining-start' && idx >= step.A_pointer && fromArray === 'A');
+                      
+    // For dimming effect
+    const isOtherArraySelected = (step.currentB !== null && step.currentA === null && isPointer && 
+                                  action !== 'initialize' && action !== 'compare') || 
+                                 (action === 'select' && fromArray === 'B');
+    
+    // Classes based on state
+    let classes = [];
+    if (isPointer) classes.push('pointer');
+    if (isPrevPointer && action === 'select' && fromArray === 'A') classes.push('prev-pointer');
+    if (wasSelected && action === 'select') classes.push('was-selected');
+    if (isSelected) {
+      if (action === 'compare') classes.push('comparing');
+      else if (action === 'remaining-start') classes.push('to-be-selected');
+      else classes.push('selected outstanding');
+    }
+    if (isOtherArraySelected) classes.push('dimmed');
+    
+    listAHtml += `<div class="array-item ${classes.join(' ')}">${num}</div>`;
   });
   listAHtml += '</div>';
   
   let listBHtml = '<div class="array-container">';
   step.listB.forEach((num, idx) => {
+    // Basic pointer checks
     const isPointer = idx === step.B_pointer;
-    const isSelected = idx === step.B_pointer && step.currentB !== null;
-    listBHtml += `<div class="array-item ${isPointer ? 'pointer' : ''} ${isSelected ? 'selected' : ''}">${num}</div>`;
+    const isPrevPointer = step.prevPointerB !== null && idx === step.prevPointerB;
+    
+    // For transition effects
+    const wasSelected = isPrevPointer && step.fromArray === 'B';
+    const isSelected = (idx === step.B_pointer && step.currentB !== null) ||
+                      (action === 'remaining-start' && idx >= step.B_pointer && fromArray === 'B');
+                      
+    // For dimming effect
+    const isOtherArraySelected = (step.currentA !== null && step.currentB === null && isPointer && 
+                                 action !== 'initialize' && action !== 'compare') ||
+                                (action === 'select' && fromArray === 'A');
+    
+    // Classes based on state
+    let classes = [];
+    if (isPointer) classes.push('pointer');
+    if (isPrevPointer && action === 'select' && fromArray === 'B') classes.push('prev-pointer');
+    if (wasSelected && action === 'select') classes.push('was-selected');
+    if (isSelected) {
+      if (action === 'compare') classes.push('comparing');
+      else if (action === 'remaining-start') classes.push('to-be-selected');
+      else classes.push('selected outstanding');
+    }
+    if (isOtherArraySelected) classes.push('dimmed');
+    
+    listBHtml += `<div class="array-item ${classes.join(' ')}">${num}</div>`;
   });
   listBHtml += '</div>';
   
   // Create visual representation of result array C - now always an array
   let resultCHtml = '<div class="array-container result-container">';
+  
   step.C.forEach((num, idx) => {
-    // Highlight the latest added item
-    const isLatest = idx === step.C.length - 1;
-    resultCHtml += `<div class="array-item ${isLatest ? 'latest-added' : ''}">${num}</div>`;
+    let classes = [];
+    
+    // Check if this is the latest added item based on step type
+    const isLatest = step.action === 'select' && idx === step.C.length - 1;
+    
+    // Check if this is part of the remaining items batch
+    const isRemainingElement = step.remainingIndices && step.remainingIndices.includes(idx);
+    
+    if (isLatest) classes.push('latest-added');
+    if (isRemainingElement) classes.push('remaining-element');
+    
+    resultCHtml += `<div class="array-item ${classes.join(' ')}">${num}</div>`;
   });
   resultCHtml += '</div>';
   
+  // Create explanation text with animation
+  let explanationHtml = '';
+  if (step.explanation && step.explanation.length > 0) {
+    explanationHtml = `
+      <div class="step-explanation">
+        <ul>
+          ${step.explanation.map(line => `<li class="explanation-line">${line}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }
+  
+  // Build the complete step display
   stepDiv.innerHTML = `
-    <strong>Step ${currentStep + 1}:</strong><br>
+    <div class="step-header">
+      <strong>Step ${currentStep + 1}:</strong>
+    </div>
+    
+    ${explanationHtml}
+    
     <div class="step-details">
-      <p>Selected: ${step.selected}</p>
       <div class="arrays">
         <div class="array-row">
           <span class="array-label">A:</span>
@@ -203,6 +412,14 @@ function displayStep() {
   `;
   
   visualization.appendChild(stepDiv);
+  
+  // Apply animation to explanation lines with delay
+  const explanationLines = stepDiv.querySelectorAll('.explanation-line');
+  explanationLines.forEach((line, index) => {
+    setTimeout(() => {
+      line.classList.add('active');
+    }, index * 300); // 300ms delay between each line
+  });
 }
 
 // Update the progress tracker display
