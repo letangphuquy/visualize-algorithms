@@ -40,11 +40,11 @@ function createStepControls() {
   const controlsDiv = document.createElement("div");
   controlsDiv.className = "step-controls";
   controlsDiv.innerHTML = `
-    <button id="start-btn" title="Go to first step"><i>⏮</i> Start</button>
-    <button id="prev-step" disabled title="Go to previous step"><i>◀</i> Back</button>
-    <button id="pause-animation" title="Pause/Resume animation"><i>⏯</i> Pause</button>
-    <button id="next-step" disabled title="Go to next step">Next <i>▶</i></button>
-    <button id="finish-btn" title="Skip to final result"><i>⏭</i> Finish</button>
+    <button id="start-btn" title="Đi đến bước đầu tiên"><i>⏮</i> Bắt đầu</button>
+    <button id="prev-step" disabled title="Đi đến bước trước đó"><i>◀</i> Lùi</button>
+    <button id="pause-animation" title="Tạm dừng/Tiếp tục hoạt hình"><i>⏯</i> Tạm dừng</button>
+    <button id="next-step" disabled title="Đi đến bước tiếp theo">Tiếp <i>▶</i></button>
+    <button id="finish-btn" title="Bỏ qua đến kết quả cuối cùng"><i>⏭</i> Kết thúc</button>
   `;
 
   // Insert after the progress tracker
@@ -75,9 +75,8 @@ function togglePause() {
       const speedValue = document.getElementById("speed").value;
       animationInterval = setInterval(() => nextStep(), speedValue);
     }
-    
-    // Update UI
-    pauseBtn.textContent = "Pause";
+      // Update UI
+    pauseBtn.textContent = getText("pause");
     pauseBtn.style.backgroundColor = "#4caf50"; // Green
     pauseBtn.classList.remove("paused");
     // Remove paused indicator from containers
@@ -87,7 +86,7 @@ function togglePause() {
     // Pause animation
     clearInterval(animationInterval);
     // Update UI
-    pauseBtn.textContent = "Resume";
+    pauseBtn.textContent = getText("resume");
     pauseBtn.style.backgroundColor = "#ff9800"; // Orange
     visualizationEl.classList.add("paused");
     progressTrackerEl.classList.add("paused");
@@ -109,7 +108,7 @@ function goToStart() {
   // Update button states
   document.getElementById("prev-step").disabled = true;
   document.getElementById("next-step").disabled = false;
-  document.getElementById("pause-animation").textContent = "▶ Play";
+  document.getElementById("pause-animation").textContent = "▶ " + getText("play");
   document.getElementById("pause-animation").style.backgroundColor = "#4caf50";
   
   isPaused = true;
@@ -121,15 +120,14 @@ function skipToFinish() {
   currentStep = steps.length - 1;
   displayStep();
   updateProgressTracker();
-  
-  // Always use array join for display
+    // Always use array join for display
   const finalResult = steps[steps.length - 1].C.join(', ');
-  document.getElementById("result").innerText = `Final Result C: [${finalResult}]`;
+  document.getElementById("result").innerText = `${getText("finalResult")} [${finalResult}]`;
   
   // Update button states
   document.getElementById("prev-step").disabled = false;
   document.getElementById("next-step").disabled = true;
-  document.getElementById("pause-animation").textContent = "▶ Play";
+  document.getElementById("pause-animation").textContent = "▶ " + getText("play");
   document.getElementById("pause-animation").style.backgroundColor = "#4caf50";
   
   isPaused = true;

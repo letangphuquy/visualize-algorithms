@@ -37,9 +37,8 @@ function initArrayContainer(id) {
   // Clear the hidden textarea
   const textarea = document.getElementById(id);
   if (textarea) textarea.value = '';
-  
-  // Initialize validation state 
-  validationState[id] = { valid: false, errorMessages: [`List ${id} has empty values. Please enter valid numbers.`] };
+    // Initialize validation state 
+  validationState[id] = { valid: false, errorMessages: [id === 'A' ? getText("emptyListA") : getText("emptyListB")] };
   updateValidationMessage(id);
   updatePlayButtonState();
 }
@@ -181,14 +180,13 @@ function sortArrayInput(id) {
       }
     }
   });
-  
-  if (!allValid) {
-    alert(`Cannot sort list ${id}. Please fix invalid entries first.`);
+    if (!allValid) {
+    alert(getText("invalidNumber"));
     return;
   }
   
   if (values.length === 0) {
-    alert(`List ${id} is empty. Nothing to sort.`);
+    alert(id === 'A' ? getText("emptyListA") : getText("emptyListB"));
     return;
   }
   
@@ -272,10 +270,10 @@ function validateInput(input) {
     }
     return true;
   }
-  
-  // More strict validation - must be a valid integer
+    // More strict validation - must be a valid integer
   if (!/^-?\d+$/.test(value)) {
-    markInputInvalid(input, `Must be a valid integer`, `Element ${inputPosition} is not a valid integer. Please enter a whole number.`, arrayId);
+    markInputInvalid(input, getText("mustBeInteger"), 
+      getText("notValidInteger", inputPosition, arrayId), arrayId);
     return false;
   }
   
@@ -285,13 +283,12 @@ function validateInput(input) {
   const MIN_VAL = -1e9;
   const MAX_VAL = 1e9;
   if (num < MIN_VAL || num > MAX_VAL) {
-    markInputInvalid(input, `Value must be between ${MIN_VAL} and ${MAX_VAL}`, 
-      `Element ${inputPosition} (${num}) is out of the allowed range. Please enter a number between -10^9 and 10^9.`, arrayId);
+    markInputInvalid(input, getText("valueRangeError", MIN_VAL, MAX_VAL), 
+      getText("outOfRange", inputPosition, num, arrayId), arrayId);
     return false;
   }
-  
-  // Valid input
-  markInputValid(input, 'Valid number');
+    // Valid input
+  markInputValid(input, getText("validInput"));
   input.value = num; // Normalize the display
   
   // Check the entire array container for validation
@@ -337,7 +334,7 @@ function markInputValid(input, tooltipMessage) {
   // Apply visual styling
   input.style.borderColor = '#4caf50';
   input.style.boxShadow = '0 0 5px rgba(76,175,80,0.5)';
-  input.title = tooltipMessage || 'Valid number';
+  input.title = tooltipMessage || getText("validNumber");
   input.classList.remove('invalid');
   
   // We don't immediately update validation state here
@@ -369,15 +366,15 @@ function validateArrayContainer(arrayId) {
   inputs.forEach(input => {
     const value = input.value.toString().trim();
     
-    // Empty value check
+  // Empty value check
     if (value === '') {
-      markInputInvalid(input, 'Value cannot be empty', 
-        `Element ${position} in List ${arrayId} is empty. Please enter a valid number.`, arrayId);
+      markInputInvalid(input, getText("valueEmpty"), 
+        getText("elementEmpty", position, arrayId), arrayId);
     }
     // Integer check
     else if (!/^-?\d+$/.test(value)) {
-      markInputInvalid(input, 'Must be a valid integer', 
-        `Element ${position} in List ${arrayId} is not a valid integer. Please enter a whole number.`, arrayId);
+      markInputInvalid(input, getText("mustBeInteger"), 
+        getText("notValidInteger", position, arrayId), arrayId);
     }
     // Range check
     else {
@@ -385,8 +382,8 @@ function validateArrayContainer(arrayId) {
       const MIN_VAL = -1e9;
       const MAX_VAL = 1e9;
       if (num < MIN_VAL || num > MAX_VAL) {
-        markInputInvalid(input, `Value must be between ${MIN_VAL} and ${MAX_VAL}`, 
-          `Element ${position} (${num}) in List ${arrayId} is out of the allowed range. Please enter a number between -10^9 and 10^9.`, arrayId);
+        markInputInvalid(input, getText("valueRangeError", MIN_VAL, MAX_VAL), 
+          getText("outOfRange", position, num, arrayId), arrayId);
       }
     }
     position++;
@@ -413,10 +410,9 @@ function updateValidationMessage(arrayId) {
       container.parentNode.insertBefore(messageContainer, container.nextSibling);
     }
   }
-  
-  // Display validation status
+    // Display validation status
   if (validationState[arrayId].valid) {
-    messageContainer.innerHTML = '<div class="validation-success">✓ Input is valid</div>';
+    messageContainer.innerHTML = `<div class="validation-success">${getText("validInput")}</div>`;
     messageContainer.classList.remove('has-errors');
   } else {
     let messages = validationState[arrayId].errorMessages.map(msg => 
@@ -424,7 +420,7 @@ function updateValidationMessage(arrayId) {
     
     messageContainer.innerHTML = `
       <div class="validation-error">
-        <strong>Please fix the following issues:</strong>
+        <strong>${getText("fixIssues")}</strong>
         <ul>${messages}</ul>
       </div>
     `;
@@ -439,14 +435,14 @@ function updatePlayButtonState() {
   
   // Disable button if any array has validation errors
   const isValid = validationState.A.valid && validationState.B.valid;
-  
-  if (isValid) {
+    if (isValid) {
     playButton.disabled = false;
     playButton.title = "Generate visualization and start animation";
     playButton.classList.remove('disabled');
   } else {
     playButton.disabled = true;
-    playButton.title = "Please fix the validation errors before starting";
+    playButton.title = getText("fixValidationErrors");
     playButton.classList.add('disabled');
+    playButton.setAttribute('data-error-message', getText("fixErrorsFirst"));
   }
 }

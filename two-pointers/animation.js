@@ -19,14 +19,14 @@ function startAnimation() {
     // Check if both arrays are valid first
     if (!validationState.A.valid || !validationState.B.valid) {
       // Show which list has issues
-      let errorMessage = "Please fix validation errors before starting:";
+      let errorMessage = getText("fixValidationErrors");
       
       if (!validationState.A.valid) {
-        errorMessage += "\n- List A: " + validationState.A.errorMessages.join("; ");
+        errorMessage += "\n- " + getText("listAErrors") + " " + validationState.A.errorMessages.join("; ");
       }
       
       if (!validationState.B.valid) {
-        errorMessage += "\n- List B: " + validationState.B.errorMessages.join("; ");
+        errorMessage += "\n- " + getText("listBErrors") + " " + validationState.B.errorMessages.join("; ");
       }
       
       throw new Error(errorMessage);
@@ -58,11 +58,11 @@ function startAnimation() {
     // Double-check validation with the parsed arrays
     if (!listA || listA.length === 0) {
       validateArrayContainer('A'); // Force update the validation state
-      throw new Error("List A cannot be empty. Please add at least one number.");
+      throw new Error(getText("emptyListA"));
     }
     if (!listB || listB.length === 0) {
       validateArrayContainer('B'); // Force update the validation state
-      throw new Error("List B cannot be empty. Please add at least one number.");
+      throw new Error(getText("emptyListB"));
     }
     
     // Show animation controls
@@ -72,11 +72,12 @@ function startAnimation() {
     }
     
     // Reset UI controls
-    document.getElementById("pause-animation").textContent = "Pause";
+    document.getElementById("pause-animation").textContent = getText("pause");
     document.getElementById("pause-animation").disabled = false;
     document.getElementById("prev-step").disabled = true;
     document.getElementById("next-step").disabled = true;
-      // Build steps for visualization
+    
+    // Build steps for visualization
     let i = 0, j = 0;
     let C = [];
     steps = [];
@@ -91,9 +92,9 @@ function startAnimation() {
       currentA: listA[0],
       currentB: listB[0],
       explanation: [
-        "Starting the merge process",
-        "Pointers initialized at the beginning of both arrays",
-        "Result array C is empty"
+        getText("startingMerge"),
+        getText("pointersInitialized"),
+        getText("resultEmpty")
       ],
       action: "initialize",
       fromArray: null,
@@ -112,11 +113,11 @@ function startAnimation() {
         currentA: listA[i],
         currentB: listB[j],
         explanation: [
-          `Comparing A[${i}] and B[${j}]`,
-          `A[${i}] = ${listA[i]}, B[${j}] = ${listB[j]}`,
+          getText("comparing", i, j),
+          getText("valuesAre", i, listA[i], j, listB[j]),
           listA[i] < listB[j] ? 
-            `Since ${listA[i]} < ${listB[j]}, we'll select from A` : 
-            `Since ${listB[j]} <= ${listA[i]}, we'll select from B`
+            getText("selectFromA", listA[i], listB[j]) : 
+            getText("selectFromB", listB[j], listA[i])
         ],
         action: "compare",
         fromArray: null,
@@ -139,9 +140,9 @@ function startAnimation() {
           currentA: i < listA.length ? listA[i] : null,
           currentB: listB[j],
           explanation: [
-            `Selected A[${prevI}] = ${listA[prevI]}`,
-            `Appended ${listA[prevI]} to C`,
-            `Advanced A pointer from ${prevI} to ${i}`
+            getText("selectedA", prevI, listA[prevI]),
+            getText("appendedToC", listA[prevI]),
+            getText("advancedAPointer", prevI, i)
           ],
           action: "select",
           fromArray: "A",
@@ -164,9 +165,9 @@ function startAnimation() {
           currentA: listA[i],
           currentB: j < listB.length ? listB[j] : null,
           explanation: [
-            `Selected B[${prevJ}] = ${listB[prevJ]}`,
-            `Appended ${listB[prevJ]} to C`,
-            `Advanced B pointer from ${prevJ} to ${j}`
+            getText("selectedB", prevJ, listB[prevJ]),
+            getText("appendedToC", listB[prevJ]),
+            getText("advancedBPointer", prevJ, j)
           ],
           action: "select",
           fromArray: "B",
@@ -175,7 +176,9 @@ function startAnimation() {
           selectedValue: listB[prevJ]
         });
       }
-    }    // Add remaining elements from array A, if any
+    }
+
+    // Add remaining elements from array A, if any
     if (i < listA.length) {
       // First add an explanation step
       steps.push({
@@ -187,9 +190,9 @@ function startAnimation() {
         currentA: listA[i],
         currentB: null,
         explanation: [
-          `Array B is exhausted`,
-          `${listA.length - i} elements remaining in A`,
-          `We'll append all remaining elements from A to C`
+          getText("arrayBExhausted"),
+          getText("elementsRemainingA", listA.length - i),
+          getText("appendRemainingA")
         ],
         action: "remaining-start",
         fromArray: "A",
@@ -210,9 +213,9 @@ function startAnimation() {
         currentA: null,
         currentB: null,
         explanation: [
-          `Added ${remaining.length} elements from A: ${remaining.join(', ')}`,
-          `All elements have been merged into C`,
-          `Merge complete`
+          getText("addedElementsA", remaining.length, remaining.join(', ')),
+          getText("allElementsMerged"),
+          getText("mergeComplete")
         ],
         action: "remaining-end",
         fromArray: "A",
@@ -234,9 +237,9 @@ function startAnimation() {
         currentA: null,
         currentB: listB[j],
         explanation: [
-          `Array A is exhausted`,
-          `${listB.length - j} elements remaining in B`,
-          `We'll append all remaining elements from B to C`
+          getText("arrayAExhausted"),
+          getText("elementsRemainingB", listB.length - j),
+          getText("appendRemainingB")
         ],
         action: "remaining-start",
         fromArray: "B",
@@ -257,9 +260,9 @@ function startAnimation() {
         currentA: null,
         currentB: null,
         explanation: [
-          `Added ${remaining.length} elements from B: ${remaining.join(', ')}`,
-          `All elements have been merged into C`,
-          `Merge complete`
+          getText("addedElementsB", remaining.length, remaining.join(', ')),
+          getText("allElementsMerged"),
+          getText("mergeComplete")
         ],
         action: "remaining-end",
         fromArray: "B",
@@ -271,7 +274,7 @@ function startAnimation() {
     
     // If both arrays are already exhausted (edge case)
     if (i >= listA.length && j >= listB.length && steps.length > 0) {
-      steps[steps.length-1].explanation.push("Merge complete");
+      steps[steps.length-1].explanation.push(getText("mergeComplete"));
     }
     
     currentStep = 0;
@@ -288,14 +291,14 @@ function startAnimation() {
       });
     }, 100);
   } catch (error) {
-    alert(`Error: ${error.message}`);
+    alert(getText("error", error.message));
   }
 }
 
 // Display the current step in the visualization
 function displayStep() {
   const visualization = document.getElementById("visualization");
-  visualization.innerHTML = "<h2>Merging Process:</h2>";
+  visualization.innerHTML = `<h2>${getText("mergingProcess")}</h2>`;
   
   if (steps.length === 0) return;
   
@@ -443,7 +446,7 @@ function displayStep() {
 // Update the progress tracker display
 function updateProgressTracker() {
   const progressTracker = document.getElementById("progress-tracker");
-  progressTracker.textContent = `Step ${currentStep + 1} of ${steps.length}`;
+  progressTracker.textContent = getText("stepCounter", currentStep + 1, steps.length);
 }
 
 // Move to the next step in animation
@@ -452,11 +455,10 @@ function nextStep(isManual = false) {
   if (currentStep >= steps.length - 1) {
     // If at the last step, stop the animation
     clearInterval(animationInterval);
-    
-    // Always use array join for display
+      // Always use array join for display
     const finalResult = steps[steps.length - 1].C.join(', ');
-    document.getElementById("result").innerText = `Final Result C: [${finalResult}]`;
-    document.getElementById("progress-tracker").textContent = `Completed: ${steps.length} steps`;
+    document.getElementById("result").innerText = `${getText("finalResult")} [${finalResult}]`;
+    document.getElementById("progress-tracker").textContent = getText("completed", steps.length);
     
     return;
   }
@@ -508,8 +510,7 @@ function resetVisualization() {
   document.getElementById("pause-animation").disabled = false;
   document.getElementById("prev-step").disabled = true;
   document.getElementById("next-step").disabled = true;
-  
-  // Reset the visualization container to show initial state
+    // Reset the visualization container to show initial state
   document.getElementById("visualization").innerHTML = 
-    "<div class='initial-state'>Enter numbers and press 'Generate & Play' to start</div>";
+    `<div class='initial-state'>${getText("initialState")}</div>`;
 }
