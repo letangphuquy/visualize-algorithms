@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minh Họa Mảng Cộng Dồn (Prefix Sum)</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Minh Họa Mảng Cộng Dồn (Prefix Sum)</h1>
+        
+        <!-- Phần nhập liệu và cài đặt -->
+        <section class="input-section">
+            <h2>Nhập mảng dữ liệu</h2>
+            <div class="array-input-container">
+                <div id="array-container" class="array-container">
+                    <!-- Các phần tử mảng sẽ được thêm vào đây -->
+                    <div class="add-item-btn">+</div>
+                </div>
+                <div class="array-tools">
+                    <button id="random-btn" class="action-btn">
+                        <i class="fas fa-dice"></i> Random                    </button>
+                    <input type="number" id="random-size" min="1" max="15" value="8" title="Số phần tử ngẫu nhiên">                    <button id="sort-btn" class="action-btn">
+                        <i class="fas fa-random"></i> Xáo trộn
+                    </button>
+                    <button id="clear-btn" class="action-btn">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+            
+            <div class="main-controls">
+                <button id="compute-btn" class="primary-btn">
+                    <i class="fas fa-calculator"></i> Tính mảng cộng dồn
+                </button>
+                <button id="reset-btn" class="secondary-btn">
+                    <i class="fas fa-redo"></i> Đặt lại
+                </button>
+            </div>
+        </section>
+        
+        <!-- Minh họa mảng cộng dồn -->
+        <section class="visualization-section">
+            <h2>Minh họa mảng cộng dồn</h2>
+            <div class="arrays-visualization">
+                <div class="array-row">
+                    <div class="array-label">A:</div>
+                    <div id="original-array" class="array-display"></div>
+                </div>
+                <div class="array-row prefix-sum-row">
+                    <div class="array-label">S:</div>
+                    <div id="prefix-sum-array" class="array-display"></div>
+                </div>
+            </div>
+            
+            <div class="computation-steps" id="computation-steps">
+                <div class="initial-message">Nhấn "Tính mảng cộng dồn" để xem quá trình tính toán</div>
+            </div>
+        </section>
+        
+        <!-- Truy vấn đoạn con -->
+        <section class="query-section">
+            <h2>Truy vấn tổng đoạn con</h2>
+            <div class="query-inputs">
+                <div class="query-input">
+                    <label for="query-left">L:</label>
+                    <input type="number" id="query-left" min="1" value="1">
+                </div>
+                <div class="query-input">
+                    <label for="query-right">R:</label>
+                    <input type="number" id="query-right" min="1" value="1">
+                </div>
+                <button id="query-btn" class="primary-btn">
+                    <i class="fas fa-search"></i> Truy vấn
+                </button>
+            </div>
+            
+            <div class="range-slider-container">
+                <div id="range-labels" class="range-labels"></div>
+                <div class="range-slider">
+                    <input type="range" id="range-left" min="1" max="1" value="1" class="slider">
+                    <input type="range" id="range-right" min="1" max="1" value="1" class="slider">
+                </div>
+            </div>
+            
+            <div class="query-result-container">
+                <div class="query-formula">
+                    <span class="formula-text">Tổng[L..R] = S[R] - S[L-1] = </span>
+                    <span id="formula-sr" class="formula-value"></span>
+                    <span class="formula-text"> - </span>
+                    <span id="formula-sl-1" class="formula-value"></span>
+                    <span class="formula-text"> = </span>
+                    <span id="formula-result" class="formula-value result"></span>
+                </div>
+                <div class="query-visualization">
+                    <div class="query-arrays">
+                        <div class="array-row">
+                            <div class="array-label">A:</div>
+                            <div id="query-original-array" class="array-display"></div>
+                        </div>
+                        <div class="array-row">
+                            <div class="array-label">Tô màu:</div>
+                            <div id="query-highlight-array" class="array-display"></div>
+                        </div>
+                    </div>
+                    <div class="prefix-segments">
+                        <div class="segment">
+                            <div class="segment-label">S[1..L-1]:</div>
+                            <div id="segment-left" class="segment-display"></div>
+                        </div>
+                        <div class="segment">
+                            <div class="segment-label">S[L..R]:</div>
+                            <div id="segment-middle" class="segment-display"></div>
+                        </div>
+                        <div class="segment">
+                            <div class="segment-label">S[1..R]:</div>
+                            <div id="segment-right" class="segment-display"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Mã nguồn minh họa -->
+        <section class="code-section">
+            <h2>Mã nguồn minh họa bằng Python</h2>
+            <pre><code class="language-python">
+# Tính mảng cộng dồn từ mảng gốc
+def compute_prefix_sum(arr):
+    n = len(arr)
+    prefix_sum = [0] * (n + 1)  # Với S[0] = 0
+    
+    for i in range(1, n + 1):
+        prefix_sum[i] = prefix_sum[i-1] + arr[i-1]
+    
+    return prefix_sum
+
+# Truy vấn tổng đoạn con
+def query_range_sum(prefix_sum, left, right):
+    # left và right có chỉ số bắt đầu từ 1
+    return prefix_sum[right] - prefix_sum[left-1]
+
+# Ví dụ sử dụng
+arr = [1, 3, 4, 8, 6, 1, 4, 2]
+print("Mảng gốc:", arr)
+
+# Tính mảng cộng dồn
+prefix_sum = compute_prefix_sum(arr)
+print("Mảng cộng dồn:", prefix_sum)
+
+# Truy vấn tổng các đoạn
+print("Tổng đoạn [2, 5]:", query_range_sum(prefix_sum, 2, 5))  # = 3 + 4 + 8 + 6 = 21
+print("Tổng đoạn [1, 8]:", query_range_sum(prefix_sum, 1, 8))  # = 1 + 3 + 4 + 8 + 6 + 1 + 4 + 2 = 29
+print("Tổng đoạn [4, 7]:", query_range_sum(prefix_sum, 4, 7))  # = 8 + 6 + 1 + 4 = 19
+</code></pre>
+        </section>
+
+        <footer>
+            <p>© 2023 Minh Họa Thuật Toán - Được tạo cho mục đích giáo dục</p>
+        </footer>
+    </div>
+
+    <!-- Thư viện highlight.js để hiển thị mã nguồn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    
+    <!-- Các tập tin JavaScript -->
+    <script src="array-utils.js"></script>
+    <script src="prefix-sum.js"></script>
+    <script src="visualization.js"></script>
+</body>
+</html>
