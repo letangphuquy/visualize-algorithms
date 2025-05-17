@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minh Họa Mảng Cộng Dồn (Prefix Sum) - Fixed</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animation-styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <style>
+        /* Additional animation fixes */
+        .step-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .step-controls button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .step-controls button:hover {
+            background-color: #2980b9;
+        }
+
+        .step-controls button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .step-controls button.paused {
+            background-color: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Minh Họa Mảng Cộng Dồn (Prefix Sum)</h1>
+        
+        <!-- Phần nhập liệu và cài đặt -->
+        <section class="input-section">
+            <h2>Nhập mảng dữ liệu</h2>
+            <div class="array-input-container">
+                <div id="array-container" class="array-container">
+                    <!-- Các phần tử mảng sẽ được thêm vào đây -->
+                    <div class="add-item-btn">+</div>
+                </div>
+                <div class="array-tools">
+                    <button id="random-btn" class="action-btn">
+                        <i class="fas fa-dice"></i> Random
+                    </button>
+                    <input type="number" id="random-size" min="1" max="15" value="8" title="Số phần tử ngẫu nhiên">
+                    <button id="sort-btn" class="action-btn">
+                        <i class="fas fa-random"></i> Xáo trộn
+                    </button>
+                    <button id="clear-btn" class="action-btn">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+            
+            <div class="main-controls">
+                <button id="compute-btn" class="primary-btn">
+                    <i class="fas fa-calculator"></i> Tính mảng cộng dồn
+                </button>
+                <button id="reset-btn" class="secondary-btn">
+                    <i class="fas fa-redo"></i> Đặt lại
+                </button>
+            </div>
+        </section>
+        
+        <!-- Minh họa mảng cộng dồn -->
+        <section class="visualization-section">
+            <h2>Minh họa mảng cộng dồn</h2>
+            <div class="arrays-visualization">
+                <div class="array-row">
+                    <div class="array-label">A:</div>
+                    <div id="original-array" class="array-display"></div>
+                </div>
+                <div class="array-row prefix-sum-row">
+                    <div class="array-label">S:</div>
+                    <div id="prefix-sum-array" class="array-display"></div>
+                </div>
+            </div>
+            
+            <div id="animation-controls" class="animation-controls">
+                <div class="speed-control">
+                    <label for="speed">Tốc độ Hoạt hình:</label>
+                    <input type="range" id="speed" min="100" max="2000" step="100" value="1000">
+                    <span id="speed-value">1s</span>
+                </div>
+            </div>
+            
+            <div id="progress-tracker" class="progress-tracker"></div>
+            
+            <!-- Animation controls will be inserted here -->
+            <div id="step-controls-container"></div>
+            
+            <div class="computation-steps" id="computation-steps">
+                <div class="initial-message">Nhấn "Tính mảng cộng dồn" để xem quá trình tính toán</div>
+            </div>
+        </section>
+        
+        <!-- Truy vấn đoạn con -->
+        <section class="query-section">
+            <h2>Truy vấn tổng đoạn con</h2>
+            <div class="query-inputs">
+                <div class="query-input">
+                    <label for="query-left">L:</label>
+                    <input type="number" id="query-left" min="1" value="1">
+                </div>
+                <div class="query-input">
+                    <label for="query-right">R:</label>
+                    <input type="number" id="query-right" min="1" value="1">
+                </div>
+                <button id="query-btn" class="primary-btn">
+                    <i class="fas fa-search"></i> Truy vấn
+                </button>
+            </div>
+            
+            <div class="range-slider-container">
+                <div id="range-labels" class="range-labels"></div>
+                <div class="range-slider">
+                    <input type="range" id="range-left" min="1" max="1" value="1" class="slider">
+                    <input type="range" id="range-right" min="1" max="1" value="1" class="slider">
+                </div>
+            </div>
+            
+            <div class="query-result-container">
+                <div class="query-formula">
+                    <span class="formula-text">Tổng[L..R] = S[R] - S[L-1] = </span>
+                    <span id="formula-sr" class="formula-value"></span>
+                    <span class="formula-text"> - </span>
+                    <span id="formula-sl-1" class="formula-value"></span>
+                    <span class="formula-text"> = </span>
+                    <span id="formula-result" class="formula-value result"></span>
+                </div>
+                <div class="query-visualization">
+                    <div class="query-arrays">
+                        <div class="array-row">
+                            <div class="array-label">A:</div>
+                            <div id="query-original-array" class="array-display"></div>
+                        </div>
+                        <div class="array-row">
+                            <div class="array-label">Tô màu:</div>
+                            <div id="query-highlight-array" class="array-display"></div>
+                        </div>
+                    </div>
+                    <div class="prefix-segments">
+                        <div class="segment">
+                            <div class="segment-label">S[1..L-1]:</div>
+                            <div id="segment-left" class="segment-display"></div>
+                        </div>
+                        <div class="segment">
+                            <div class="segment-label">S[L..R]:</div>
+                            <div id="segment-middle" class="segment-display"></div>
+                        </div>
+                        <div class="segment">
+                            <div class="segment-label">S[1..R]:</div>
+                            <div id="segment-right" class="segment-display"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Mã nguồn minh họa -->
+        <section class="code-section">
+            <h2>Mã nguồn minh họa bằng Python</h2>
+            <pre><code class="language-python">
+# Tính mảng cộng dồn từ mảng gốc
+def compute_prefix_sum(arr):
+    n = len(arr)
+    prefix_sum = [0] * (n + 1)  # Với S[0] = 0
+    
+    for i in range(1, n + 1):
+        prefix_sum[i] = prefix_sum[i-1] + arr[i-1]
+    
+    return prefix_sum
+
+# Truy vấn tổng đoạn con
+def query_range_sum(prefix_sum, left, right):
+    # left và right có chỉ số bắt đầu từ 1
+    return prefix_sum[right] - prefix_sum[left-1]
+
+# Ví dụ sử dụng
+arr = [1, 3, 4, 8, 6, 1, 4, 2]
+print("Mảng gốc:", arr)
+
+# Tính mảng cộng dồn
+prefix_sum = compute_prefix_sum(arr)
+print("Mảng cộng dồn:", prefix_sum)
+
+# Truy vấn tổng các đoạn
+print("Tổng đoạn [2, 5]:", query_range_sum(prefix_sum, 2, 5))  # = 3 + 4 + 8 + 6 = 21
+print("Tổng đoạn [1, 8]:", query_range_sum(prefix_sum, 1, 8))  # = 1 + 3 + 4 + 8 + 6 + 1 + 4 + 2 = 29
+print("Tổng đoạn [4, 7]:", query_range_sum(prefix_sum, 4, 7))  # = 8 + 6 + 1 + 4 = 19
+</code></pre>
+        </section>
+
+        <footer>
+            <p>© 2023 Minh Họa Thuật Toán - Được tạo cho mục đích giáo dục</p>
+        </footer>
+    </div>
+
+    <!-- Thư viện highlight.js để hiển thị mã nguồn -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    
+    <!-- We'll include the needed scripts right in this file -->
+    <script src="array-utils.js"></script>
+    <script src="prefix-sum.js"></script>
+    
+    <!-- Fixed Animation Controls -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create and set up the PrefixSumVisualization object with fixed methods
+            window.PrefixSumVisualization = {
+                // Animation speed control (milliseconds)
+                animationSpeed: 1000,
+                
+                // Animation control variables
+                steps: [],
+                currentStep: 0,
+                animationInterval: null,
+                isPaused: false,
+                isAnimating: false,
+                
+                // References to key DOM elements
+                elements: {
+                    arrayContainer: null,
+                    generateRandomBtn: null,
+                    randomSizeInput: null,
+                    sortBtn: null,
+                    clearBtn: null,
+                    computePrefixSumBtn: null,
+                    resetBtn: null,
+                    originalArrayContainer: null,
+                    prefixSumArrayContainer: null,
+                    computationStepsContainer: null,
+                    queryLInput: null,
+                    queryRInput: null,
+                    executeQueryBtn: null,
+                    rangeSliderLeft: null,
+                    rangeSliderRight: null,
+                    rangeLabels: null,
+                    formulaSR: null,
+                    formulaSL1: null,
+                    formulaResult: null,
+                    queryOriginalArray: null,
+                    queryHighlightArray: null,
+                    segmentLeft: null,
+                    segmentMiddle: null,
+                    segmentRight: null,
+                    speedSlider: null,
+                    speedValue: null,
+                    progressTracker: null,
+                    animationControls: null
+                },
+                
+                // Initialize the application
+                init() {
+                    this.cacheElements();
+                    this.setupEventListeners();
+                    this.generateRandomArray();
+                },
+                
+                // Cache DOM elements for later use
+                cacheElements() {
+                    this.elements.arrayContainer = document.getElementById('array-container');
+                    this.elements.generateRandomBtn = document.getElementById('random-btn');
+                    this.elements.randomSizeInput = document.getElementById('random-size');
+                    this.elements.sortBtn = document.getElementById('sort-btn');
+                    this.elements.clearBtn = document.getElementById('clear-btn');
+                    this.elements.computePrefixSumBtn = document.getElementById('compute-btn');
+                    this.elements.resetBtn = document.getElementById('reset-btn');
+                    this.elements.originalArrayContainer = document.getElementById('original-array');
+                    this.elements.prefixSumArrayContainer = document.getElementById('prefix-sum-array');
+                    this.elements.computationStepsContainer = document.getElementById('computation-steps');
+                    this.elements.queryLInput = document.getElementById('query-left');
+                    this.elements.queryRInput = document.getElementById('query-right');
+                    this.elements.executeQueryBtn = document.getElementById('query-btn');
+                    this.elements.rangeSliderLeft = document.getElementById('range-left');
+                    this.elements.rangeSliderRight = document.getElementById('range-right');
+                    this.elements.rangeLabels = document.getElementById('range-labels');
+                    this.elements.formulaSR = document.getElementById('formula-sr');
+                    this.elements.formulaSL1 = document.getElementById('formula-sl-1');
+                    this.elements.formulaResult = document.getElementById('formula-result');
+                    this.elements.queryOriginalArray = document.getElementById('query-original-array');
+                    this.elements.queryHighlightArray = document.getElementById('query-highlight-array');
+                    this.elements.segmentLeft = document.getElementById('segment-left');
+                    this.elements.segmentMiddle = document.getElementById('segment-middle');
+                    this.elements.segmentRight = document.getElementById('segment-right');
+                    this.elements.speedSlider = document.getElementById('speed');
+                    this.elements.speedValue = document.getElementById('speed-value');
+                    this.elements.progressTracker = document.getElementById('progress-tracker');
+                    this.elements.animationControls = document.getElementById('animation-controls');
+                },
+                
+                // Set up event listeners
+                setupEventListeners() {
+                    // Generate random array button
+                    if (this.elements.generateRandomBtn) {
+                        this.elements.generateRandomBtn.addEventListener('click', () => {
+                            const size = this.elements.randomSizeInput ? parseInt(this.elements.randomSizeInput.value) : 8;
+                            this.generateRandomArray(size);
+                        });
+                    }
+                    
+                    // Sort array button (Shuffle)
+                    if (this.elements.sortBtn) {
+                        this.elements.sortBtn.addEventListener('click', () => {
+                            this.shuffleArray();
+                        });
+                    }
+                    
+                    // Clear array button
+                    if (this.elements.clearBtn) {
+                        this.elements.clearBtn.addEventListener('click', () => {
+                            this.clearArray();
+                        });
+                    }
+                    
+                    // Compute prefix sum button
+                    if (this.elements.computePrefixSumBtn) {
+                        this.elements.computePrefixSumBtn.addEventListener('click', () => {
+                            this.computeAndVisualizePrefixSum();
+                        });
+                    }
+                    
+                    // Reset button
+                    if (this.elements.resetBtn) {
+                        this.elements.resetBtn.addEventListener('click', () => {
+                            this.resetVisualization();
+                        });
+                    }
+                    
+                    // Animation speed control
+                    if (this.elements.speedSlider) {
+                        this.elements.speedSlider.addEventListener('input', () => {
+                            const speedValue = this.elements.speedSlider.value;
+                            this.animationSpeed = parseInt(speedValue);
+                            this.elements.speedValue.textContent = (speedValue / 1000) + 's';
+                            
+                            // Update interval if animation is running
+                            if (this.animationInterval) {
+                                clearInterval(this.animationInterval);
+                                if (!this.isPaused) {
+                                    this.animationInterval = setInterval(() => this.nextStep(), this.animationSpeed);
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Execute query button
+                    if (this.elements.executeQueryBtn) {
+                        this.elements.executeQueryBtn.addEventListener('click', () => {
+                            this.executeAndVisualizeQuery();
+                        });
+                    }
+                    
+                    // Range sliders for query
+                    if (this.elements.rangeSliderLeft && this.elements.rangeSliderRight) {
+                        this.elements.rangeSliderLeft.addEventListener('input', () => {
+                            this.updateQueryFromSliders();
+                        });
+                        
+                        this.elements.rangeSliderRight.addEventListener('input', () => {
+                            this.updateQueryFromSliders();
+                        });
+                    }
+                    
+                    // Manual query input
+                    if (this.elements.queryLInput && this.elements.queryRInput) {
+                        this.elements.queryLInput.addEventListener('change', () => {
+                            this.updateSlidersFromQuery();
+                        });
+                        
+                        this.elements.queryRInput.addEventListener('change', () => {
+                            this.updateSlidersFromQuery();
+                        });
+                    }
+                    
+                    // Add item button
+                    const addBtn = this.elements.arrayContainer ? 
+                        this.elements.arrayContainer.querySelector('.add-item-btn') : null;
+                    
+                    if (addBtn) {
+                        addBtn.addEventListener('click', () => {
+                            this.addArrayElement();
+                        });
+                    }
+                    
+                    // Set up event delegation for array item interactions
+                    if (this.elements.arrayContainer) {
+                        this.elements.arrayContainer.addEventListener('click', (e) => {
+                            if (e.target.classList.contains('remove-item-btn')) {
+                                const arrayItem = e.target.closest('.array-item');
+                                if (arrayItem) {
+                                    this.removeArrayElement(arrayItem);
+                                }
+                            }
+                        });
+                    }
+                },
+                
+                // Generate a random array
+                generateRandomArray(size = 8) {
+                    const randomArray = ArrayUtils.generateRandomArray(size, 1, 10);
+                    
+                    // Clear the existing array container
+                    this.clearArrayContainer();
+                    
+                    // Create array items for each element
+                    randomArray.forEach(value => {
+                        this.addArrayElement(value);
+                    });
+                    
+                    // Clear previous prefix sum and computation steps
+                    this.resetVisualization();
+                    
+                    // Update query range inputs
+                    this.updateQueryRangeInputs();
+                },
+                
+                // Clear the array container
+                clearArrayContainer() {
+                    if (this.elements.arrayContainer) {
+                        // Keep only the add button
+                        const addBtn = this.elements.arrayContainer.querySelector('.add-item-btn');
+                        this.elements.arrayContainer.innerHTML = '';
+                        if (addBtn) {
+                            this.elements.arrayContainer.appendChild(addBtn);
+                        } else {
+                            // If add button was removed, create a new one
+                            const newAddBtn = document.createElement('div');
+                            newAddBtn.className = 'add-item-btn';
+                            newAddBtn.textContent = '+';
+                            this.elements.arrayContainer.appendChild(newAddBtn);
+                            
+                            // Add event listener to the new button
+                            newAddBtn.addEventListener('click', () => {
+                                this.addArrayElement();
+                            });
+                        }
+                    }
+                },
+                
+                // Clear the array
+                clearArray() {
+                    this.clearArrayContainer();
+                    this.resetVisualization();
+                },
+                
+                // Reset the visualization components
+                resetVisualization() {
+                    if (this.elements.prefixSumArrayContainer) {
+                        this.elements.prefixSumArrayContainer.innerHTML = '';
+                    }
+                    
+                    if (this.elements.computationStepsContainer) {
+                        this.elements.computationStepsContainer.innerHTML = '<div class="initial-message">Nhấn "Tính mảng cộng dồn" để xem quá trình tính toán</div>';
+                    }
+                    
+                    // Clear any animations
+                    clearInterval(this.animationInterval);
+                    this.isAnimating = false;
+                    this.steps = [];
+                    this.currentStep = 0;
+                    
+                    // Hide animation controls
+                    if (this.elements.animationControls) {
+                        this.elements.animationControls.classList.remove("visible");
+                    }
+                    
+                    // Remove step controls if they exist
+                    const stepControls = document.querySelector('.step-controls');
+                    if (stepControls) {
+                        stepControls.remove();
+                    }
+                    
+                    // Clear formula and queries
+                    this.clearQueryResults();
+                },
+                
+                // Add an array element to the UI
+                addArrayElement(value = 0) {
+                    if (!this.elements.arrayContainer) return;
+                    
+                    // Create array item
+                    const arrayItem = document.createElement('div');
+                    arrayItem.className = 'array-item';
+                    
+                    // Create input for the value
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'array-value';
+                    input.value = value;
+                    input.min = 0;
+                    input.max = 99;
+                    
+                    // Create remove button
+                    const removeBtn = document.createElement('div');
+                    removeBtn.className = 'remove-item-btn';
+                    removeBtn.innerHTML = '&times;';
+                    
+                    // Append to array item
+                    arrayItem.appendChild(input);
+                    arrayItem.appendChild(removeBtn);
+                    
+                    // Find add button
+                    const addBtn = this.elements.arrayContainer.querySelector('.add-item-btn');
+                    
+                    // Insert before the add button if found, otherwise append to container
+                    if (addBtn) {
+                        this.elements.arrayContainer.insertBefore(arrayItem, addBtn);
+                    } else {
+                        this.elements.arrayContainer.appendChild(arrayItem);
+                    }
+                    
+                    // Add event listener to remove button
+                    removeBtn.addEventListener('click', () => {
+                        this.removeArrayElement(arrayItem);
+                        
+                        // Reset visualizations since array changed
+                        this.resetVisualization();
+                    });
+                    
+                    // Update query range inputs
+                    this.updateQueryRangeInputs();
+                },
+                
+                // Remove an array element from the UI
+                removeArrayElement(arrayItem) {
+                    if (this.elements.arrayContainer && arrayItem) {
+                        this.elements.arrayContainer.removeChild(arrayItem);
+                        this.updateQueryRangeInputs();
+                    }
+                },
+                
+                // Update query range inputs based on array length
+                updateQueryRangeInputs() {
+                    const arrayLength = this.getArrayFromUI().length;
+                    
+                    // If array is empty, reset query inputs
+                    if (arrayLength === 0) {
+                        this.elements.queryLInput.value = 1;
+                        this.elements.queryLInput.max = 1;
+                        this.elements.queryRInput.value = 1;
+                        this.elements.queryRInput.max = 1;
+                        
+                        // Update range sliders
+                        this.elements.rangeSliderLeft.max = 1;
+                        this.elements.rangeSliderLeft.value = 1;
+                        this.elements.rangeSliderRight.max = 1;
+                        this.elements.rangeSliderRight.value = 1;
+                        
+                        this.updateRangeLabels(arrayLength);
+                        return;
+                    }
+                    
+                    // Update min/max attributes and values
+                    this.elements.queryLInput.max = arrayLength;
+                    this.elements.queryRInput.max = arrayLength;
+                    
+                    // Default to 1 for L and array length for R if they're out of bounds
+                    if (parseInt(this.elements.queryLInput.value) > arrayLength) {
+                        this.elements.queryLInput.value = 1;
+                    }
+                    
+                    if (parseInt(this.elements.queryRInput.value) > arrayLength) {
+                        this.elements.queryRInput.value = arrayLength;
+                    }
+                    
+                    // Update range sliders
+                    this.elements.rangeSliderLeft.max = arrayLength;
+                    this.elements.rangeSliderLeft.value = this.elements.queryLInput.value;
+                    this.elements.rangeSliderRight.max = arrayLength;
+                    this.elements.rangeSliderRight.value = this.elements.queryRInput.value;
+                    
+                    // Update range labels
+                    this.updateRangeLabels(arrayLength);
+                },
+                
+                // Create and update range labels 
+                updateRangeLabels(arrayLength) {
+                    if (!this.elements.rangeLabels) return;
+                    
+                    this.elements.rangeLabels.innerHTML = '';
+                    
+                    // Create labels based on array length
+                    for (let i = 1; i <= arrayLength; i++) {
+                        const label = document.createElement('span');
+                        label.className = 'range-label';
+                        label.textContent = i;
+                        this.elements.rangeLabels.appendChild(label);
+                    }
+                },
+                
+                // Update query inputs based on slider values
+                updateQueryFromSliders() {
+                    const leftValue = parseInt(this.elements.rangeSliderLeft.value);
+                    const rightValue = parseInt(this.elements.rangeSliderRight.value);
+                    
+                    // Ensure right slider is not less than left slider
+                    if (rightValue < leftValue) {
+                        this.elements.rangeSliderRight.value = leftValue;
+                        this.elements.queryRInput.value = leftValue;
+                    } else {
+                        this.elements.queryRInput.value = rightValue;
+                    }
+                    
+                    this.elements.queryLInput.value = leftValue;
+                    
+                    // If query button exists, automatically execute query
+                    if (this.elements.executeQueryBtn) {
+                        this.executeAndVisualizeQuery();
+                    }
+                },
+                
+                // Update sliders based on query inputs
+                updateSlidersFromQuery() {
+                    const leftValue = parseInt(this.elements.queryLInput.value);
+                    const rightValue = parseInt(this.elements.queryRInput.value);
+                    const maxValue = parseInt(this.elements.queryLInput.max);
+                    
+                    // Validate inputs
+                    let validLeftValue = Math.min(Math.max(1, leftValue), maxValue);
+                    let validRightValue = Math.min(Math.max(validLeftValue, rightValue), maxValue);
+                    
+                    // Update inputs and sliders
+                    this.elements.queryLInput.value = validLeftValue;
+                    this.elements.queryRInput.value = validRightValue;
+                    this.elements.rangeSliderLeft.value = validLeftValue;
+                    this.elements.rangeSliderRight.value = validRightValue;
+                },
+                
+                // Get the array from the UI inputs
+                getArrayFromUI() {
+                    if (!this.elements.arrayContainer) return [];
+                    
+                    const arrayItems = this.elements.arrayContainer.querySelectorAll('.array-item');
+                    const array = [];
+                    
+                    arrayItems.forEach(item => {
+                        const input = item.querySelector('.array-value');
+                        if (input) {
+                            const value = parseInt(input.value) || 0;
+                            array.push(value);
+                        }
+                    });
+                    
+                    return array;
+                },
+                
+                // Compute and visualize prefix sum
+                computeAndVisualizePrefixSum() {
+                    // Check if already animating
+                    if (this.isAnimating) return;
+                    
+                    const array = this.getArrayFromUI();
+                    if (array.length === 0) {
+                        alert('Vui lòng nhập ít nhất một phần tử cho mảng!');
+                        return;
+                    }
+                    
+                    // Reset visualization
+                    this.resetVisualization();
+                    this.isAnimating = true;
+                    
+                    // Visualize the original array
+                    this.visualizeOriginalArray(array);
+                    
+                    // Initialize the prefix sum calculator
+                    PrefixSum.initialize(array);
+                    
+                    // Show animation controls
+                    if (this.elements.animationControls) {
+                        this.elements.animationControls.classList.add("visible");
+                    }
+                    
+                    // Create step controls
+                    this.createStepControls();
+                    
+                    // Generate steps for visualization
+                    this.prepareAnimationSteps();
+                    
+                    // Start the animation
+                    this.startAnimation();
+                },
+                
+                // Create step controls for animation
+                createStepControls() {
+                    // Remove existing controls if any
+                    const existingControls = document.querySelector('.step-controls');
+                    if (existingControls) {
+                        existingControls.remove();
+                    }
+                    
+                    // Create new controls
+                    const controlsDiv = document.createElement("div");
+                    controlsDiv.className = "step-controls";
+                    controlsDiv.innerHTML = `
+                        <button id="start-btn" title="Đi đến bước đầu tiên"><i>⏮</i> Bắt đầu</button>
+                        <button id="prev-step" disabled title="Đi đến bước trước đó"><i>◀</i> Lùi</button>
+                        <button id="pause-animation" title="Tạm dừng/Tiếp tục hoạt hình"><i>⏯</i> Tạm dừng</button>
+                        <button id="next-step" disabled title="Đi đến bước tiếp theo">Tiếp <i>▶</i></button>
+                        <button id="finish-btn" title="Bỏ qua đến kết quả cuối cùng"><i>⏭</i> Kết thúc</button>
+                    `;
+                    
+                    // Insert after the progress tracker
+                    const container = document.getElementById('step-controls-container');
+                    if (container) {
+                        container.appendChild(controlsDiv);
+                    } else if (this.elements.progressTracker) {
+                        this.elements.progressTracker.after(controlsDiv);
+                    } else if (this.elements.animationControls) {
+                        this.elements.animationControls.after(controlsDiv);
+                    }
+                    
+                    // Set up button click handlers
+                    document.getElementById("start-btn").addEventListener("click", () => this.goToStart());
+                    document.getElementById("prev-step").addEventListener("click", () => this.prevStep());
+                    document.getElementById("pause-animation").addEventListener("click", () => this.togglePause());
+                    document.getElementById("next-step").addEventListener("click", () => {
+                        if (this.currentStep < this.steps.length - 1) {
+                            this.nextStep(true); // Pass true to indicate manual navigation
+                        }
+                    });
+                    document.getElementById("finish-btn").addEventListener("click", () => this.skipToFinish());
+                },
+                
+                // Prepare animation steps
+                prepareAnimationSteps() {
+                    const computationSteps = PrefixSum.getComputationSteps();
+                    const prefixSum = PrefixSum.prefixSumArray;
+                    
+                    this.steps = [];
+                    
+                    // Add initial state step
+                    this.steps.push({
+                        prefixSum: [0], // Start with just S[0] = 0
+                        currentPrefixSumIndex: 0,
+                        originalArrayIndex: -1, // No element highlighted yet
+                        explanation: ['Bắt đầu tính toán mảng cộng dồn', 'S[0] = 0 (khởi tạo)']
+                    });
+                    
+                    // Add steps for each computation
+                    for (let i = 1; i < computationSteps.length; i++) {
+                        const step = computationSteps[i];
+                        
+                        // Create a copy of the prefix sum array up to the current position
+                        const currentPrefixSum = prefixSum.slice(0, step.position + 1);
+                        
+                        this.steps.push({
+                            prefixSum: currentPrefixSum,
+                            currentPrefixSumIndex: step.position,
+                            originalArrayIndex: step.originalPosition,
+                            explanation: [
+                                `S[${step.position}] = S[${step.position-1}] + A[${step.originalPosition + 1}]`,
+                                `S[${step.position}] = ${step.previousPrefixSum} + ${step.value} = ${step.currentPrefixSum}`
+                            ]
+                        });
+                    }
+                    
+                    this.currentStep = 0;
+                },
+                
+                // Start the animation
+                startAnimation() {
+                    // Clear any existing animation
+                    clearInterval(this.animationInterval);
+                    this.isPaused = false;
+                    
+                    // Reset UI controls
+                    const pauseBtn = document.getElementById("pause-animation");
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    
+                    if (pauseBtn) {
+                        pauseBtn.textContent = "⏯ Tạm dừng";
+                        pauseBtn.classList.remove("paused");
+                    }
+                    
+                    if (prevBtn) prevBtn.disabled = true;
+                    if (nextBtn) nextBtn.disabled = true;
+                    
+                    this.currentStep = 0;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // Start the animation timer
+                    this.animationInterval = setInterval(() => this.nextStep(), this.animationSpeed);
+                    
+                    // Auto-scroll to the animation section
+                    setTimeout(() => {
+                        if (this.elements.computationStepsContainer) {
+                            this.elements.computationStepsContainer.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'start'
+                            });
+                        }
+                    }, 100);
+                },
+                
+                // Toggle animation pause state
+                togglePause() {
+                    const pauseBtn = document.getElementById("pause-animation");
+                    
+                    if (this.isPaused) {
+                        // Resume animation if we have more steps
+                        if (this.currentStep < this.steps.length - 1) {
+                            this.animationInterval = setInterval(() => this.nextStep(), this.animationSpeed);
+                        }
+                        // Update UI
+                        if (pauseBtn) {
+                            pauseBtn.textContent = "⏯ Tạm dừng";
+                            pauseBtn.classList.remove("paused");
+                        }
+                    } else {
+                        // Pause animation
+                        clearInterval(this.animationInterval);
+                        // Update UI
+                        if (pauseBtn) {
+                            pauseBtn.textContent = "⏯ Tiếp tục";
+                            pauseBtn.classList.add("paused");
+                        }
+                    }
+                    
+                    this.isPaused = !this.isPaused;
+                    
+                    // Enable navigation buttons when paused, with proper boundary checks
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    
+                    if (prevBtn) prevBtn.disabled = !this.isPaused || this.currentStep <= 0;
+                    if (nextBtn) nextBtn.disabled = !this.isPaused || this.currentStep >= this.steps.length - 1;
+                },
+                
+                // Go to first step
+                goToStart() {
+                    clearInterval(this.animationInterval);
+                    this.currentStep = 0;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // Update button states
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    const pauseBtn = document.getElementById("pause-animation");
+                    
+                    if (prevBtn) prevBtn.disabled = true;
+                    if (nextBtn) nextBtn.disabled = false;
+                    if (pauseBtn) {
+                        pauseBtn.textContent = "⏯ Tiếp tục";
+                        pauseBtn.classList.add("paused");
+                    }
+                    
+                    this.isPaused = true;
+                },
+                
+                // Skip to finish
+                skipToFinish() {
+                    clearInterval(this.animationInterval);
+                    this.currentStep = this.steps.length - 1;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // Update button states
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    const pauseBtn = document.getElementById("pause-animation");
+                    
+                    if (prevBtn) prevBtn.disabled = false;
+                    if (nextBtn) nextBtn.disabled = true;
+                    if (pauseBtn) {
+                        pauseBtn.textContent = "⏯ Tiếp tục";
+                        pauseBtn.classList.add("paused");
+                    }
+                    
+                    this.isPaused = true;
+                },
+                
+                // Move to the next step in animation
+                nextStep(isManual = false) {
+                    // Prevent stepping beyond array bounds
+                    if (this.currentStep >= this.steps.length - 1) {
+                        // If at the last step, stop the animation
+                        clearInterval(this.animationInterval);
+                        this.updateProgressTracker();
+                        return;
+                    }
+                    
+                    this.currentStep++;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // If manual navigation, update button states
+                    if (isManual) {
+                        const prevBtn = document.getElementById("prev-step");
+                        const nextBtn = document.getElementById("next-step");
+                        
+                        if (prevBtn) prevBtn.disabled = this.currentStep <= 0;
+                        if (nextBtn) nextBtn.disabled = this.currentStep >= this.steps.length - 1;
+                    }
+                },
+                
+                // Move to the previous step in animation
+                prevStep() {
+                    // Prevent stepping before first step
+                    if (this.currentStep <= 0) return;
+                    
+                    this.currentStep--;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // Update button states
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    
+                    if (nextBtn) nextBtn.disabled = false; // Next is always available if we went back
+                    if (prevBtn) prevBtn.disabled = this.currentStep <= 0;
+                },
+                
+                // Update the progress tracker display
+                updateProgressTracker() {
+                    if (this.elements.progressTracker) {
+                        this.elements.progressTracker.textContent = `Bước ${this.currentStep + 1} / ${this.steps.length}`;
+                    }
+                },
+                
+                // Display the current step
+                displayStep() {
+                    if (this.steps.length === 0 || this.currentStep >= this.steps.length) return;
+                    
+                    const step = this.steps[this.currentStep];
+                    
+                    // Visualize the current state of the prefix sum array
+                    this.visualizePrefixSumArray(step.prefixSum);
+                    
+                    // Highlight the relevant elements
+                    if (step.originalArrayIndex >= 0) {
+                        this.highlightArrayElement('original-array', step.originalArrayIndex);
+                    }
+                    
+                    if (step.currentPrefixSumIndex >= 0) {
+                        this.highlightArrayElement('prefix-sum-array', step.currentPrefixSumIndex);
+                    }
+                    
+                    // Update the computation steps display
+                    this.displayComputationStep(step);
+                },
+                
+                // Display a computation step in the UI
+                displayComputationStep(step) {
+                    if (!this.elements.computationStepsContainer) return;
+                    
+                    // Clear previous steps if this is the first step
+                    if (this.currentStep === 0) {
+                        this.elements.computationStepsContainer.innerHTML = '';
+                    }
+                    
+                    const stepElement = document.createElement('div');
+                    stepElement.className = 'computation-step active';
+                    
+                    // Add explanation lines
+                    if (step.explanation && step.explanation.length) {
+                        const explanationHtml = `
+                            <div class="step-explanation">
+                                <ul>
+                                    ${step.explanation.map(line => `<li class="explanation-line">${line}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                        stepElement.innerHTML = explanationHtml;
+                    }
+                    
+                    // Add to the computation steps container
+                    this.elements.computationStepsContainer.appendChild(stepElement);
+                    
+                    // Scroll to show the latest step
+                    this.elements.computationStepsContainer.scrollTop = this.elements.computationStepsContainer.scrollHeight;
+                    
+                    // Apply animation to explanation lines with delay
+                    const explanationLines = stepElement.querySelectorAll('.explanation-line');
+                    explanationLines.forEach((line, index) => {
+                        setTimeout(() => {
+                            line.classList.add('active');
+                        }, index * 300); // 300ms delay between each line
+                    });
+                },
+                
+                // Visualize the original array
+                visualizeOriginalArray(array) {
+                    if (!this.elements.originalArrayContainer) return;
+                    
+                    this.elements.originalArrayContainer.innerHTML = '';
+                    
+                    // Create and append array elements
+                    array.forEach((value, index) => {
+                        const element = document.createElement('div');
+                        element.className = 'array-element';
+                        
+                        // Create value span
+                        const valueSpan = document.createElement('span');
+                        valueSpan.className = 'element-value';
+                        valueSpan.textContent = value;
+                        element.appendChild(valueSpan);
+                        
+                        // Create index span
+                        const indexSpan = document.createElement('span');
+                        indexSpan.className = 'element-index';
+                        indexSpan.textContent = index + 1; // 1-indexed display
+                        element.appendChild(indexSpan);
+                        
+                        this.elements.originalArrayContainer.appendChild(element);
+                    });
+                },
+                
+                // Visualize the prefix sum array
+                visualizePrefixSumArray(prefixSumArray) {
+                    if (!this.elements.prefixSumArrayContainer) return;
+                    
+                    this.elements.prefixSumArrayContainer.innerHTML = '';
+                    
+                    // Create and append array elements
+                    prefixSumArray.forEach((value, index) => {
+                        const element = document.createElement('div');
+                        element.className = 'array-element';
+                        
+                        const valueSpan = document.createElement('span');
+                        valueSpan.className = 'element-value';
+                        valueSpan.textContent = value;
+                        
+                        const indexSpan = document.createElement('span');
+                        indexSpan.className = 'element-index';
+                        indexSpan.textContent = index; // 0-indexed for prefix sum
+                        
+                        element.appendChild(valueSpan);
+                        element.appendChild(indexSpan);
+                        
+                        this.elements.prefixSumArrayContainer.appendChild(element);
+                    });
+                },
+                
+                // Shuffle the current array
+                shuffleArray() {
+                    // Get current array from UI
+                    const array = this.getArrayFromUI();
+                    if (array.length === 0) {
+                        alert('Vui lòng nhập ít nhất một phần tử cho mảng!');
+                        return;
+                    }
+                    
+                    // Shuffle the array
+                    const shuffledArray = ArrayUtils.shuffleArray(array);
+                    
+                    // Update the UI with shuffled array
+                    this.updateArrayItemsInUI(shuffledArray);
+                    
+                    // Reset visualizations since array changed
+                    this.resetVisualization();
+                },
+                
+                // Update array items in the UI with new values
+                updateArrayItemsInUI(array) {
+                    if (!this.elements.arrayContainer) return;
+                    
+                    // Remove existing array items
+                    const arrayItems = this.elements.arrayContainer.querySelectorAll('.array-item');
+                    arrayItems.forEach(item => item.remove());
+                    
+                    // Add new array items
+                    array.forEach(value => {
+                        this.addArrayElement(value);
+                    });
+                },
+                
+                // Highlight an element in an array visualization
+                highlightArrayElement(containerId, index) {
+                    const container = document.getElementById(containerId);
+                    if (!container) return;
+                    
+                    const elements = container.querySelectorAll('.array-element');
+                    
+                    // Remove existing highlights
+                    elements.forEach(el => el.classList.remove('active'));
+                    
+                    // Add highlight to the specified element
+                    if (index >= 0 && index < elements.length) {
+                        elements[index].classList.add('active');
+                    }
+                },
+                
+                // Execute query
+                executeAndVisualizeQuery() {
+                    const L = parseInt(this.elements.queryLInput.value, 10);
+                    const R = parseInt(this.elements.queryRInput.value, 10);
+                    
+                    // Get the current array and make sure it's initialized
+                    const array = this.getArrayFromUI();
+                    if (array.length === 0) {
+                        alert('Vui lòng nhập mảng và tính mảng cộng dồn trước!');
+                        return;
+                    }
+                    
+                    // Initialize prefix sum if not done yet
+                    if (!PrefixSum.prefixSumArray || PrefixSum.prefixSumArray.length === 0) {
+                        PrefixSum.initialize(array);
+                    }
+                    
+                    // Get the query details
+                    const queryDetails = PrefixSum.getQueryDetails(L, R);
+                    
+                    if (!queryDetails.valid) {
+                        alert(queryDetails.message || 'Chỉ số truy vấn không hợp lệ!');
+                        return;
+                    }
+                    
+                    // Display the query formula
+                    if (this.elements.formulaSR) {
+                        this.elements.formulaSR.textContent = queryDetails.rightSum;
+                    }
+                    
+                    if (this.elements.formulaSL1) {
+                        this.elements.formulaSL1.textContent = queryDetails.leftMinusOneSum;
+                    }
+                    
+                    if (this.elements.formulaResult) {
+                        this.elements.formulaResult.textContent = queryDetails.rangeSum;
+                    }
+                    
+                    // Visualize the query
+                    this.visualizeQuery(array, queryDetails);
+                },
+                
+                // Visualize query
+                visualizeQuery(array, queryDetails) {
+                    // Visualize original array with query range
+                    if (this.elements.queryOriginalArray) {
+                        this.elements.queryOriginalArray.innerHTML = '';
+                        
+                        array.forEach((value, index) => {
+                            const element = document.createElement('div');
+                            element.className = 'array-element';
+                            
+                            // Highlight if in query range
+                            const oneIndexed = index + 1;
+                            if (oneIndexed >= queryDetails.left && oneIndexed <= queryDetails.right) {
+                                element.classList.add('highlight');
+                            }
+                            
+                            const valueSpan = document.createElement('span');
+                            valueSpan.className = 'element-value';
+                            valueSpan.textContent = value;
+                            
+                            const indexSpan = document.createElement('span');
+                            indexSpan.className = 'element-index';
+                            indexSpan.textContent = oneIndexed;
+                            
+                            element.appendChild(valueSpan);
+                            element.appendChild(indexSpan);
+                            
+                            this.elements.queryOriginalArray.appendChild(element);
+                        });
+                    }
+                    
+                    // Visualize highlight array
+                    if (this.elements.queryHighlightArray) {
+                        this.elements.queryHighlightArray.innerHTML = '';
+                        
+                        array.forEach((value, index) => {
+                            const element = document.createElement('div');
+                            element.className = 'array-element';
+                            
+                            // Color based on position
+                            const oneIndexed = index + 1;
+                            if (oneIndexed < queryDetails.left) {
+                                element.classList.add('highlight-subtract');
+                            } else if (oneIndexed >= queryDetails.left && oneIndexed <= queryDetails.right) {
+                                element.classList.add('highlight');
+                            } else {
+                                element.classList.add('inactive');
+                            }
+                            
+                            const indexSpan = document.createElement('span');
+                            indexSpan.className = 'element-index';
+                            indexSpan.textContent = oneIndexed;
+                            
+                            element.appendChild(indexSpan);
+                            
+                            this.elements.queryHighlightArray.appendChild(element);
+                        });
+                    }
+                    
+                    // Visualize segments
+                    this.visualizeSegments(array, queryDetails);
+                },
+                
+                // Visualize segments
+                visualizeSegments(array, queryDetails) {
+                    // Visualize left segment (S[1...L-1])
+                    if (this.elements.segmentLeft) {
+                        this.elements.segmentLeft.innerHTML = '';
+                        
+                        if (queryDetails.left > 1) {
+                            for (let i = 1; i < queryDetails.left; i++) {
+                                const element = document.createElement('div');
+                                element.className = 'segment-element highlight-subtract';
+                                element.textContent = array[i-1]; // 0-indexed array
+                                this.elements.segmentLeft.appendChild(element);
+                            }
+                            
+                            // Show sum
+                            const sumElement = document.createElement('div');
+                            sumElement.className = 'segment-sum';
+                            sumElement.textContent = `= ${queryDetails.leftMinusOneSum}`;
+                            this.elements.segmentLeft.appendChild(sumElement);
+                        } else {
+                            this.elements.segmentLeft.innerHTML = '<div class="empty-segment">Không có phần tử</div>';
+                        }
+                    }
+                    
+                    // Visualize middle segment (S[L...R])
+                    if (this.elements.segmentMiddle) {
+                        this.elements.segmentMiddle.innerHTML = '';
+                        
+                        for (let i = queryDetails.left; i <= queryDetails.right; i++) {
+                            const element = document.createElement('div');
+                            element.className = 'segment-element highlight';
+                            element.textContent = array[i-1]; // 0-indexed array
+                            this.elements.segmentMiddle.appendChild(element);
+                        }
+                        
+                        // Show sum
+                        const sumElement = document.createElement('div');
+                        sumElement.className = 'segment-sum';
+                        sumElement.textContent = `= ${queryDetails.rangeSum}`;
+                        this.elements.segmentMiddle.appendChild(sumElement);
+                    }
+                    
+                    // Visualize right segment (S[1...R])
+                    if (this.elements.segmentRight) {
+                        this.elements.segmentRight.innerHTML = '';
+                        
+                        for (let i = 1; i <= queryDetails.right; i++) {
+                            const element = document.createElement('div');
+                            element.className = 'segment-element';
+                            element.textContent = array[i-1]; // 0-indexed array
+                            
+                            if (i < queryDetails.left) {
+                                element.classList.add('highlight-subtract');
+                            } else {
+                                element.classList.add('highlight');
+                            }
+                            
+                            this.elements.segmentRight.appendChild(element);
+                        }
+                        
+                        // Show sum
+                        const sumElement = document.createElement('div');
+                        sumElement.className = 'segment-sum';
+                        sumElement.textContent = `= ${queryDetails.rightSum}`;
+                        this.elements.segmentRight.appendChild(sumElement);
+                    }
+                },
+                
+                // Clear query results
+                clearQueryResults() {
+                    if (this.elements.formulaSR) this.elements.formulaSR.textContent = '';
+                    if (this.elements.formulaSL1) this.elements.formulaSL1.textContent = '';
+                    if (this.elements.formulaResult) this.elements.formulaResult.textContent = '';
+                    
+                    if (this.elements.queryOriginalArray) this.elements.queryOriginalArray.innerHTML = '';
+                    if (this.elements.queryHighlightArray) this.elements.queryHighlightArray.innerHTML = '';
+                    
+                    if (this.elements.segmentLeft) this.elements.segmentLeft.innerHTML = '';
+                    if (this.elements.segmentMiddle) this.elements.segmentMiddle.innerHTML = '';
+                    if (this.elements.segmentRight) this.elements.segmentRight.innerHTML = '';
+                }
+            };
+            
+            // Initialize the visualization
+            PrefixSumVisualization.init();
+        });
+    </script>
+</body>
+</html>

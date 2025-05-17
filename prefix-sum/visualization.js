@@ -11,10 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const PrefixSumVisualization = {
     // Animation speed control (milliseconds)
-    animationSpeed: 500,
+    animationSpeed: 1000,
     
     // Flag to track if an animation is currently running
     isAnimating: false,
+    
+    // Animation control variables
+    steps: [],
+    currentStep: 0,
+    animationInterval: null,
+    isPaused: false,
     
     // References to key DOM elements
     elements: {
@@ -30,7 +36,8 @@ const PrefixSumVisualization = {
         executeQueryBtn: null,
         queryFormulaContainer: null,
         queryResultContainer: null,
-        highlightedArrayContainer: null
+        highlightedArrayContainer: null,
+        progressTracker: null
     },
 
     /**
@@ -45,7 +52,7 @@ const PrefixSumVisualization = {
         
         // Generate initial random array
         this.generateRandomArray();
-    },    /**
+    },/**
      * Cache DOM elements for later use
      */
     cacheElements() {
@@ -74,7 +81,13 @@ const PrefixSumVisualization = {
         this.elements.segmentMiddle = document.getElementById('segment-middle');
         this.elements.segmentRight = document.getElementById('segment-right');
         this.elements.addItemBtn = this.elements.arrayContainer ? this.elements.arrayContainer.querySelector('.add-item-btn') : null;
-    },    /**
+        
+        // Animation controls
+        this.elements.speedSlider = document.getElementById('speed');
+        this.elements.speedValue = document.getElementById('speed-value');
+        this.elements.progressTracker = document.getElementById('progress-tracker');
+        this.elements.animationControls = document.getElementById('animation-controls');
+    },/**
      * Set up event listeners for user interaction
      */
     setupEventListeners() {
@@ -97,8 +110,7 @@ const PrefixSumVisualization = {
                 this.clearArray();
             });
         }
-        
-        // Compute prefix sum button
+          // Compute prefix sum button
         if (this.elements.computePrefixSumBtn) {
             this.elements.computePrefixSumBtn.addEventListener('click', () => {
                 this.computeAndVisualizePrefixSum();
@@ -109,6 +121,23 @@ const PrefixSumVisualization = {
         if (this.elements.resetBtn) {
             this.elements.resetBtn.addEventListener('click', () => {
                 this.resetVisualization();
+            });
+        }
+        
+        // Animation speed control
+        if (this.elements.speedSlider) {
+            this.elements.speedSlider.addEventListener('input', () => {
+                const speedValue = this.elements.speedSlider.value;
+                this.animationSpeed = parseInt(speedValue);
+                this.elements.speedValue.textContent = (speedValue / 1000) + 's';
+                
+                // Update interval if animation is running
+                if (this.animationInterval) {
+                    clearInterval(this.animationInterval);
+                    if (!this.isPaused) {
+                        this.animationInterval = setInterval(() => this.nextStep(), this.animationSpeed);
+                    }
+                }
             });
         }
         
@@ -427,12 +456,9 @@ const PrefixSumVisualization = {
         });
         
         return array;
-    },
-    
-    /**
+    },    /**
      * Parse the array input and compute its prefix sum with visualization
-     */
-    computeAndVisualizePrefixSum() {
+     */    computeAndVisualizePrefixSum() {
         // Check if already animating
         if (this.isAnimating) return;
         
@@ -442,18 +468,31 @@ const PrefixSumVisualization = {
             return;
         }
         
+        // Reset visualization
+        this.resetVisualization();
+        
         // Visualize the original array
         this.visualizeOriginalArray(array);
         
         // Initialize the prefix sum calculator
         PrefixSum.initialize(array);
         
-        // Clear previous computation steps
-        this.elements.computationStepsContainer.innerHTML = '';
+        // Show animation controls
+        if (this.elements.animationControls) {
+            this.elements.animationControls.classList.add("visible");
+        }
         
-        // Animate the prefix sum computation
-        this.animatePrefixSumComputation();
-    },    /**
+        // Create step controls if they don't exist yet
+        if (typeof this.createStepControls === 'function' && !document.querySelector('.step-controls')) {
+            this.createStepControls();
+        }
+        
+        // Generate steps for visualization
+        this.prepareAnimationSteps();
+        
+        // Start the animation
+        this.startAnimation();
+    },/**
      * Visualize the original array
      * @param {number[]} array - Array to visualize
      */
@@ -481,8 +520,7 @@ const PrefixSumVisualization = {
             
             this.elements.originalArrayContainer.appendChild(element);
         });
-    },
-      /**
+    },    /**
      * Shuffle the current array
      */
     shuffleArray() {
@@ -507,51 +545,175 @@ const PrefixSumVisualization = {
         // Clear query results
         this.clearQueryResults();
     },
-    
-    /**
-     * Animate the prefix sum computation process step by step
-     */
-    async animatePrefixSumComputation() {
-        this.isAnimating = true;
-        const steps = PrefixSum.getComputationSteps();
-        
-        // Initialize an empty prefix sum array for visualization
-        const prefixSumArray = PrefixSum.prefixSumArray;
-        
-        // Render the initial state of the prefix sum array (all zeros)
-        this.visualizePrefixSumArray(prefixSumArray);
-        
-        // Create the computation steps container
-        for (let i = 0; i < steps.length; i++) {
-            const step = steps[i];
-            
-            // Skip the initial step
-            if (i === 0) continue;
-            
-            // Highlight the element being processed in the original array
-            this.highlightArrayElement('original-array', step.originalPosition);
-            
-            // Highlight the corresponding element in the prefix sum array
-            this.highlightArrayElement('prefix-sum-array', step.position);
-            
-            // Update the computation steps display
-            this.displayComputationStep(step, i);
-            
-            // Wait for the animation delay
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            // Update the prefix sum array display
-            this.visualizePrefixSumArray(prefixSumArray);
-            
-            // Remove highlights after a delay
-            await new Promise(resolve => setTimeout(resolve, 400));
-            this.removeAllHighlights();
         }
         
-        this.isAnimating = false;
+        // Reset visualization
+        this.resetVisualization();
         
-        // Update query range inputs after computation
-        this.updateQueryRangeInputs();
+        // Visualize the original array
+        this.visualizeOriginalArray(array);
+        
+        // Initialize the prefix sum calculator
+        PrefixSum.initialize(array);
+        
+        // Show animation controls
+        if (this.elements.animationControls) {
+            this.elements.animationControls.classList.add("visible");
+        }
+        
+        // Generate steps for visualization
+        this.prepareAnimationSteps();
+        
+        // Start the animation
+        this.startAnimation();
+    },
+    
+    /**
+     * Create a series of animation steps for the prefix sum computation
+     */
+    prepareAnimationSteps() {
+        const computationSteps = PrefixSum.getComputationSteps();
+        const prefixSum = PrefixSum.prefixSumArray;
+        const originalArray = PrefixSum.originalArray;
+        
+        this.steps = [];
+        
+        // Add initial state step
+        this.steps.push({
+            prefixSum: [0], // Start with just S[0] = 0
+            currentPrefixSumIndex: 0,
+            originalArrayIndex: -1, // No element highlighted yet
+            explanation: ['Bắt đầu tính toán mảng cộng dồn', 'S[0] = 0 (khởi tạo)']
+        });
+        
+        // Add steps for each computation
+        for (let i = 1; i < computationSteps.length; i++) {
+            const step = computationSteps[i];
+            
+            // Create a copy of the prefix sum array up to the current position
+            const currentPrefixSum = prefixSum.slice(0, step.position + 1);
+            
+            this.steps.push({
+                prefixSum: currentPrefixSum,
+                currentPrefixSumIndex: step.position,
+                originalArrayIndex: step.originalPosition,
+                explanation: [
+                    `S[${step.position}] = S[${step.position-1}] + A[${step.originalPosition + 1}]`,
+                    `S[${step.position}] = ${step.previousPrefixSum} + ${step.value} = ${step.currentPrefixSum}`
+                ]
+            });
+        }
+        
+        this.currentStep = 0;
+    },
+      /**
+     * Start the animation process
+     */
+    startAnimation() {
+        // Clear any existing animation
+        clearInterval(this.animationInterval);
+        this.isPaused = false;
+        
+        // Reset UI controls if they exist
+        const pauseBtn = document.getElementById("pause-animation");
+        const prevBtn = document.getElementById("prev-step");
+        const nextBtn = document.getElementById("next-step");
+        
+        if (pauseBtn) {
+            pauseBtn.textContent = "⏯ Tạm dừng";
+            pauseBtn.disabled = false;
+        }
+        
+        if (prevBtn) {
+            prevBtn.disabled = true;
+        }
+        
+        if (nextBtn) {
+            nextBtn.disabled = true;
+        }
+        
+        this.currentStep = 0;
+        this.displayStep();
+        this.updateProgressTracker();
+        
+        // Start the animation timer
+        this.animationInterval = setInterval(() => this.nextStep(), this.animationSpeed);
+        
+        // Auto-scroll to the animation section
+        setTimeout(() => {
+            if (this.elements.computationStepsContainer) {
+                this.elements.computationStepsContainer.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start'
+                });
+            }
+        }, 100);
+    },
+    
+    /**
+     * Display the current step in the visualization
+     */
+    displayStep() {
+        if (this.steps.length === 0) return;
+        
+        const step = this.steps[this.currentStep];
+        
+        // Visualize the current state of the prefix sum array
+        this.visualizePrefixSumArray(step.prefixSum);
+        
+        // Highlight the relevant elements
+        if (step.originalArrayIndex >= 0) {
+            this.highlightArrayElement('original-array', step.originalArrayIndex);
+        }
+        
+        if (step.currentPrefixSumIndex >= 0) {
+            this.highlightArrayElement('prefix-sum-array', step.currentPrefixSumIndex);
+        }
+        
+        // Update the computation steps display
+        this.displayComputationStep(step);
+    },
+    
+    /**
+     * Display a computation step in the UI
+     * @param {Object} step - Step object with explanation
+     */
+    displayComputationStep(step) {
+        if (!this.elements.computationStepsContainer) return;
+        
+        // Clear previous steps if this is the first step
+        if (this.currentStep === 0) {
+            this.elements.computationStepsContainer.innerHTML = '';
+        }
+        
+        const stepElement = document.createElement('div');
+        stepElement.className = 'computation-step active';
+        
+        // Add explanation lines
+        if (step.explanation && step.explanation.length) {
+            const explanationHtml = `
+                <div class="step-explanation">
+                    <ul>
+                        ${step.explanation.map(line => `<li class="explanation-line">${line}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            stepElement.innerHTML = explanationHtml;
+        }
+        
+        // Add to the computation steps container
+        this.elements.computationStepsContainer.appendChild(stepElement);
+        
+        // Scroll to show the latest step
+        this.elements.computationStepsContainer.scrollTop = this.elements.computationStepsContainer.scrollHeight;
+        
+        // Apply animation to explanation lines with delay
+        const explanationLines = stepElement.querySelectorAll('.explanation-line');
+        explanationLines.forEach((line, index) => {
+            setTimeout(() => {
+                line.classList.add('active');
+            }, index * 300); // 300ms delay between each line
+        });
     },
     
     /**
@@ -894,7 +1056,163 @@ const PrefixSumVisualization = {
         // Update query range inputs
         this.updateQueryRangeInputs();
     },
-};
+    
+    /**
+     * Create step navigation controls
+     */
+    createStepControls() {
+        // Add navigation controls to the UI with distinct buttons to toggle navigation
+        const controlsDiv = document.createElement("div");
+        controlsDiv.className = "step-controls";
+        controlsDiv.innerHTML = `
+            <button id="start-btn" title="Đi đến bước đầu tiên"><i>⏮</i> Bắt đầu</button>
+            <button id="prev-step" disabled title="Đi đến bước trước đó"><i>◀</i> Lùi</button>
+            <button id="pause-animation" title="Tạm dừng/Tiếp tục hoạt hình"><i>⏯</i> Tạm dừng</button>
+            <button id="next-step" disabled title="Đi đến bước tiếp theo">Tiếp <i>▶</i></button>
+            <button id="finish-btn" title="Bỏ qua đến kết quả cuối cùng"><i>⏭</i> Kết thúc</button>
+        `;
 
-// Make PrefixSumVisualization available globally
-window.PrefixSumVisualization = PrefixSumVisualization;
+        // Insert after the progress tracker
+        if (this.elements.progressTracker) {
+            this.elements.progressTracker.after(controlsDiv);
+        } else if (this.elements.animationControls) {
+            this.elements.animationControls.after(controlsDiv);
+        }
+        
+        // Set up button click handlers
+        document.getElementById("start-btn").addEventListener("click", () => this.goToStart());
+        document.getElementById("prev-step").addEventListener("click", () => this.prevStep());
+        document.getElementById("pause-animation").addEventListener("click", () => this.togglePause());
+        document.getElementById("next-step").addEventListener("click", () => {
+            if (this.currentStep < this.steps.length - 1) {
+                this.nextStep(true); // Pass true to indicate manual navigation
+            }
+        });
+        document.getElementById("finish-btn").addEventListener("click", () => this.skipToFinish());
+    },
+    
+    /**
+     * Toggle animation pause state
+     */
+    togglePause() {
+        const pauseBtn = document.getElementById("pause-animation");
+        
+        if (this.isPaused) {
+            // Resume animation if we have more steps
+            if (this.currentStep < this.steps.length - 1) {
+                this.animationInterval = setInterval(() => this.nextStep(), this.animationSpeed);
+            }
+            // Update UI
+            pauseBtn.textContent = "⏯ Tạm dừng";
+            pauseBtn.classList.remove("paused");
+        } else {
+            // Pause animation
+            clearInterval(this.animationInterval);
+            // Update UI
+            pauseBtn.textContent = "⏯ Tiếp tục";
+            pauseBtn.classList.add("paused");
+        }
+        
+        this.isPaused = !this.isPaused;
+        // Enable navigation buttons when paused, with proper boundary checks
+        document.getElementById("prev-step").disabled = !this.isPaused || this.currentStep <= 0;
+        document.getElementById("next-step").disabled = !this.isPaused || this.currentStep >= this.steps.length - 1;
+    },
+    
+    /**
+     * Go to first step function
+     */
+    goToStart() {
+        clearInterval(this.animationInterval);
+        this.currentStep = 0;
+        this.displayStep();
+        this.updateProgressTracker();
+        
+        // Update button states
+        document.getElementById("prev-step").disabled = true;
+        document.getElementById("next-step").disabled = false;
+        document.getElementById("pause-animation").textContent = "⏯ Tiếp tục";
+        document.getElementById("pause-animation").classList.add("paused");
+        
+        this.isPaused = true;
+    },
+    
+    /**
+     * Skip to finish function
+     */
+    skipToFinish() {
+        clearInterval(this.animationInterval);
+        this.currentStep = this.steps.length - 1;
+        this.displayStep();
+        this.updateProgressTracker();
+        
+        // Update button states
+        document.getElementById("prev-step").disabled = false;
+        document.getElementById("next-step").disabled = true;
+        document.getElementById("pause-animation").textContent = "⏯ Tiếp tục";
+        document.getElementById("pause-animation").classList.add("paused");
+        
+        this.isPaused = true;
+    },
+    
+    /**
+     * Move to the next step in animation
+     * @param {boolean} isManual - Whether the navigation was triggered manually
+     */
+    nextStep(isManual = false) {
+        // Prevent stepping beyond array bounds
+        if (this.currentStep >= this.steps.length - 1) {
+            // If at the last step, stop the animation
+            clearInterval(this.animationInterval);
+            this.updateProgressTracker();
+            return;
+        }
+
+        this.currentStep++;
+        if (this.currentStep < this.steps.length) {
+            this.displayStep();
+            this.updateProgressTracker();
+            
+            // If manual navigation, update button states with robust boundary checks
+            if (isManual) {
+                document.getElementById("prev-step").disabled = this.currentStep <= 0;
+                document.getElementById("next-step").disabled = this.currentStep >= this.steps.length - 1;
+            }
+        }
+    },
+    
+    /**
+     * Move to the previous step in animation
+     */
+    prevStep() {
+        // Prevent stepping before first step
+        if (this.currentStep <= 0) return;
+        
+        this.currentStep--;
+        this.displayStep();
+        this.updateProgressTracker();
+        
+        // Update button states with strict boundary checks
+        document.getElementById("next-step").disabled = false; // Next is always available if we went back
+        document.getElementById("prev-step").disabled = this.currentStep <= 0;
+    },
+    
+    /**
+     * Update the progress tracker display
+     */
+    updateProgressTracker() {
+        if (this.elements.progressTracker) {
+            this.elements.progressTracker.textContent = `Bước ${this.currentStep + 1} / ${this.steps.length}`;
+        }
+    },
+    
+    /**
+     * Display the current step in the visualization
+     */
+    displayStep() {
+        if (this.steps.length === 0) return;
+        
+        const step = this.steps[this.currentStep];
+        // Visualize based on the current step
+        this.visualizeStepState(step);
+    },

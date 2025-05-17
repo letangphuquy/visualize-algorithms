@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minh Họa Mảng Cộng Dồn (Prefix Sum) - Improved</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <style>
+        /* General Styles */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --tertiary-color: #e74c3c;
+            --array-a-color: #e74c3c; /* Red for array A */
+            --array-a-bg: #fef2f0; /* Light red background */
+            --array-a-active: #c0392b; /* Darker red for active state */
+            --array-s-color: #3498db; /* Blue for array S */
+            --array-s-bg: #ebf5fb; /* Light blue background */
+            --array-s-active: #2980b9; /* Darker blue for active state */
+            --background-color: #f5f5f5;
+            --section-bg-color: #ffffff;
+            --border-color: #ddd;
+            --text-color: #333;
+            --highlight-color: #ffeb3b;
+            --highlight-secondary: #ffc107;
+            
+            /* Query Visualization Colors */
+            --query-left-color: #9b59b6; /* Purple for left segment (S[1..L-1]) */
+            --query-left-bg: #f4ecf7; /* Light purple background */
+            --query-range-color: #f39c12; /* Orange for range segment (S[L..R]) */
+            --query-range-bg: #fef5e7; /* Light orange background */
+            --query-right-color: #16a085; /* Teal for right segment (S[1..R]) */
+            --query-right-bg: #e8f8f5; /* Light teal background */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        section {
+            background-color: var(--section-bg-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Array Input Styles */
+        .array-input-container {
+            margin-bottom: 20px;
+        }
+
+        .array-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            min-height: 60px;
+            align-items: center;
+        }
+
+        .array-item {
+            display: flex;
+            position: relative;
+        }
+
+        .array-value {
+            width: 50px;
+            height: 50px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 18px;
+            padding: 0;
+            appearance: none;
+            -moz-appearance: textfield;
+        }
+
+        .array-value::-webkit-inner-spin-button,
+        .array-value::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .remove-item-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 20px;
+            height: 20px;
+            background-color: var(--tertiary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+            z-index: 1;
+        }
+
+        .add-item-btn {
+            width: 50px;
+            height: 50px;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .array-tools {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .action-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        input[type="number"] {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .main-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .primary-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .secondary-btn {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Arrays Visualization */
+        .visualization-section {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .animation-container {
+            display: flex;
+            flex-direction: column;
+            height: auto;
+            min-height: 300px;
+            max-height: 500px;
+            overflow: visible;
+        }
+
+        .arrays-visualization {
+            display: flex;
+            flex-direction: column;
+            gap: 40px; /* Increased gap for better alignment with indexes */
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .array-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            height: 70px; /* Fixed height for array rows */
+        }
+
+        .array-label {
+            font-weight: bold;
+            min-width: 30px;
+            text-align: right;
+            font-size: 18px;
+        }
+
+        /* Different colors for A and S arrays */
+        .array-label-A {
+            color: var(--array-a-color);
+        }
+
+        .array-label-S {
+            color: var(--array-s-color);
+        }
+
+        .array-display {
+            display: flex;
+            overflow-x: visible;
+            overflow-y: visible;
+            padding-bottom: 30px; /* Space for indexes */
+            height: 70px;
+        }
+
+        .array-element {
+            width: 50px;
+            height: 50px;
+            margin-right: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Different colors for A and S elements */
+        .original-array-element {
+            background-color: var(--array-a-bg);
+            border: 2px solid var(--array-a-color);
+        }
+
+        .prefix-sum-array-element {
+            background-color: var(--array-s-bg);
+            border: 2px solid var(--array-s-color);
+        }
+
+        /* Empty placeholder for array A index 0 */
+        .placeholder-element {
+            width: 50px;
+            height: 50px;
+            margin-right: 5px;
+            background-color: transparent;
+            border: none;
+            visibility: hidden;
+        }
+
+        .array-element.active {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        .original-array-element.active {
+            background-color: #fadbd8; /* Lighter red for active */
+            border-color: var(--array-a-active);
+        }
+
+        .prefix-sum-array-element.active {
+            background-color: #d4e6f1; /* Lighter blue for active */
+            border-color: var(--array-s-active);
+        }
+
+        .element-value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .element-index {
+            position: absolute;
+            bottom: -22px;
+            font-size: 12px;
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Different colors for A and S indices */
+        .original-array-index {
+            color: var(--array-a-color);
+        }
+
+        .prefix-sum-array-index {
+            color: var(--array-s-color);
+        }
+
+        /* Animation for collapsing elements */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse-animation {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes slide-elements {
+            0% { transform: translateY(0); opacity: 1; }
+            50% { transform: translateY(-15px); opacity: 0.8; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        .slide-animation {
+            animation: slide-elements 0.8s ease-in-out;
+        }
+
+        /* Animation Controls Styling */
+        .controls-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            border: 1px solid #d0e3f0;
+        }
+
+        .animation-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 300px;  /* Make slider shorter */
+        }
+
+        .speed-control label {
+            font-weight: bold;
+            width: 130px;
+        }
+
+        .speed-control input[type="range"] {
+            width: 120px;
+        }
+
+        .progress-tracker {
+            text-align: center;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .step-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .step-controls button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .step-controls button:hover {
+            background-color: #2980b9;
+        }
+
+        .step-controls button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .step-controls button.paused {
+            background-color: #f39c12;
+        }
+
+        /* Steps and Explanation Styling */
+        .visualization-steps {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            max-height: 200px;
+            margin-top: 20px;
+            border: 1px solid #d0e3f0;
+        }
+
+        .computation-step {
+            margin-bottom: 15px;
+            padding: 12px;
+            background-color: #ffffff;
+            border-left: 5px solid var(--primary-color);
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .computation-step.active {
+            opacity: 1;
+            border-left-color: var(--secondary-color);
+            background-color: #e9f7fe;
+        }
+
+        .step-explanation ul {
+            list-style-type: none;
+            padding-left: 10px;
+        }
+
+        .explanation-line {
+            padding: 8px 0;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .explanation-line.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .formula-part {
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .formula-A {
+            color: var(--array-a-color);
+            background-color: var(--array-a-bg);
+        }
+
+        .formula-S {
+            color: var(--array-s-color);
+            background-color: var(--array-s-bg);
+        }
+
+        .formula-value {
+            font-weight: bold;
+        }
+
+        .initial-message {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        /* Query section styles - simplified for space */
+        .query-section {
+            display: block;
+            margin-bottom: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .query-inputs {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .query-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .query-input label {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .query-input input {
+            width: 60px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .range-slider-container {
+            margin-bottom: 20px;
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            padding: 0 10px;
+        }
+
+        .range-slider {
+            position: relative;
+            height: 40px;
+            padding: 0 10px;
+        }        .slider {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 5px;
+            background: #ddd;
+            border-radius: 5px;
+            pointer-events: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .query-result-container {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }        .query-formula {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            line-height: 1.8;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--primary-color);
+            position: relative;
+        }
+
+        .formula-text {
+            font-size: 18px;
+        }
+
+        .formula-value {
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin: 0 3px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        /* Enhanced formula value styling */
+        #formula-sr {
+            background-color: var(--query-right-bg);
+            color: var(--query-right-color);
+            border: 1px solid var(--query-right-color);
+        }
+
+        #formula-sl-1 {
+            background-color: var(--query-left-bg);
+            color: var(--query-left-color);
+            border: 1px solid var(--query-left-color);
+        }
+
+        #formula-result {
+            background-color: var(--query-range-bg);
+            color: var(--query-range-color);
+            border: 1px solid var(--query-range-color);
+            font-size: 22px;
+            padding: 5px 10px;
+        }        .query-visualization {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .query-arrays {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+        
+        /* Copy of S array for the query section */
+        .query-s-array-row {
+            margin-top: 15px;
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+        }
+
+        .prefix-segments {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        /* L and R indicators on the array */
+        .boundary-marker {
+            position: absolute;
+            top: -15px;
+            padding: 2px 8px;
+            background-color: #e74c3c;
+            color: white;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+          .L-marker {
+            left: calc(var(--L-position) * 55px + 105px); /* Shifted right by one unit (55px) */
+            transform: translateX(27.5px); /* Center on the array element */
+        }
+        
+        .R-marker {
+            left: calc(var(--R-position) * 55px + 105px); /* Shifted right by one unit (55px) */
+            transform: translateX(27.5px); /* Center on the array element */
+        }.segment {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .segment-label {
+            font-weight: bold;
+            min-width: 100px;
+            border-radius: 4px;
+            padding: 6px 10px;
+            margin-right: 10px;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* Colorful segment labels */
+        .segment-label-left {
+            background-color: var(--query-left-color);
+        }
+        
+        .segment-label-range {
+            background-color: var(--query-range-color);
+        }
+        
+        .segment-label-right {
+            background-color: var(--query-right-color);
+        }
+
+        .segment-display {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 70px;
+            position: relative;
+        }
+        
+        /* Colorful segment backgrounds */
+        .segment-display-left {
+            background-color: var(--query-left-bg);
+            border-left: 4px solid var(--query-left-color);
+        }
+        
+        .segment-display-range {
+            background-color: var(--query-range-bg);
+            border-left: 4px solid var(--query-range-color);
+        }
+        
+        .segment-display-right {
+            background-color: var(--query-right-bg);
+            border-left: 4px solid var(--query-right-color);
+        }
+
+        /* Placeholder element for alignment in segments */
+        .segment-placeholder {
+            width: 50px;
+            height: 50px;
+            margin-right: 5px;
+            background-color: transparent;
+            border: none;
+            visibility: hidden;
+        }
+
+        .segment-element {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        /* Segment element color styles */
+        .segment-element-left {
+            background-color: var(--query-left-color);
+        }
+        
+        .segment-element-range {
+            background-color: var(--query-range-color);
+        }
+        
+        .segment-element-right {
+            background-color: var(--query-right-color);
+        }
+        
+        /* Boundary indicators for L and R */
+        .boundary-indicator {
+            position: absolute;
+            top: -25px;
+            background-color: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
+        .boundary-L {
+            left: 0;
+        }
+        
+        .boundary-R {
+            right: 0;
+        }
+
+        .segment-sum {
+            margin-left: 15px;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 5px 10px;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        /* Different colors for segment sums */
+        .segment-sum-left {
+            color: var(--query-left-color);
+            border-left: 3px solid var(--query-left-color);
+        }
+        
+        .segment-sum-range {
+            color: var(--query-range-color);
+            border-left: 3px solid var(--query-range-color);
+        }
+        
+        .segment-sum-right {
+            color: var(--query-right-color);
+            border-left: 3px solid var(--query-right-color);
+        }
+
+        .empty-segment {
+            color: #777;
+            font-style: italic;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Minh Họa Mảng Cộng Dồn (Prefix Sum)</h1>
+        
+        <section class="input-section">
+            <h2>Nhập mảng dữ liệu</h2>
+            <div class="array-input-container">
+                <div id="array-container" class="array-container">
+                    <!-- Các phần tử mảng sẽ được thêm vào đây -->
+                    <div class="add-item-btn">+</div>
+                </div>
+                <div class="array-tools">
+                    <button id="random-btn" class="action-btn">
+                        <i class="fas fa-dice"></i> Random
+                    </button>
+                    <input type="number" id="random-size" min="1" max="15" value="8" title="Số phần tử ngẫu nhiên">
+                    <button id="sort-btn" class="action-btn">
+                        <i class="fas fa-random"></i> Xáo trộn
+                    </button>
+                    <button id="clear-btn" class="action-btn">
+                        <i class="fas fa-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+            
+            <div class="main-controls">
+                <button id="compute-btn" class="primary-btn">
+                    <i class="fas fa-calculator"></i> Tính mảng cộng dồn
+                </button>
+                <button id="reset-btn" class="secondary-btn">
+                    <i class="fas fa-redo"></i> Đặt lại
+                </button>
+            </div>
+        </section>
+        
+        <!-- Improved Visualization Section -->
+        <section class="visualization-section">
+            <h2>Minh họa mảng cộng dồn</h2>
+            
+            <!-- Controls first -->
+            <div class="controls-section" id="controls-section" style="display: none;">
+                <div class="animation-controls">
+                    <div class="speed-control">
+                        <label for="speed">Tốc độ Hoạt hình:</label>
+                        <input type="range" id="speed" min="100" max="2000" step="100" value="1000">
+                        <span id="speed-value">1s</span>
+                    </div>
+                    <div id="progress-tracker" class="progress-tracker"></div>
+                </div>
+                <div id="step-controls-container"></div>
+            </div>
+            
+            <!-- Animation container -->
+            <div class="animation-container">                <!-- Arrays visualization -->
+                <div class="arrays-visualization">
+                    <div class="array-row">
+                        <div class="array-label array-label-A">A:</div>
+                        <div id="original-array" class="array-display"></div>
+                    </div>
+                    <div class="array-row prefix-sum-row">
+                        <div class="array-label array-label-S">S:</div>
+                        <div id="prefix-sum-array" class="array-display"></div>
+                    </div>
+                </div>
+                
+                <!-- Current step explanation -->
+                <div class="visualization-steps" id="current-step-explanation">
+                    <div class="initial-message">Nhấn "Tính mảng cộng dồn" để xem quá trình tính toán</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Query Section -->
+        <section class="query-section" id="query-section">
+            <h2>Truy vấn tổng đoạn con</h2>
+            <div class="query-inputs">
+                <div class="query-input">
+                    <label for="query-left">L:</label>
+                    <input type="number" id="query-left" min="1" value="1">
+                </div>
+                <div class="query-input">
+                    <label for="query-right">R:</label>
+                    <input type="number" id="query-right" min="1" value="1">
+                </div>
+                <button id="query-btn" class="primary-btn">
+                    <i class="fas fa-search"></i> Truy vấn
+                </button>
+            </div>
+            
+            <div class="range-slider-container">
+                <div id="range-labels" class="range-labels"></div>
+                <div class="range-slider">
+                    <input type="range" id="range-left" min="1" max="1" value="1" class="slider">
+                    <input type="range" id="range-right" min="1" max="1" value="1" class="slider">
+                </div>
+            </div>
+            
+            <div class="query-result-container">
+                <div class="query-formula">
+                    <span class="formula-text">Tổng[L..R] = S[R] - S[L-1] = </span>
+                    <span id="formula-sr" class="formula-value formula-S"></span>
+                    <span class="formula-text"> - </span>
+                    <span id="formula-sl-1" class="formula-value formula-S"></span>
+                    <span class="formula-text"> = </span>
+                    <span id="formula-result" class="formula-value result"></span>
+                </div>                <div class="query-visualization">
+                    <div class="query-arrays">
+                        <div class="array-row">
+                            <div class="array-label array-label-A">A:</div>
+                            <div id="query-original-array" class="array-display"></div>
+                        </div>
+                        <div class="array-row">
+                            <div class="array-label">Tô màu:</div>
+                            <div id="query-highlight-array" class="array-display"></div>
+                        </div>
+                        <div class="array-row query-s-array-row">
+                            <div class="array-label array-label-S">S:</div>
+                            <div id="query-prefix-sum-array" class="array-display"></div>
+                        </div>
+                    </div>
+                    <div class="prefix-segments">
+                        <div class="segment">
+                            <div class="segment-label segment-label-left">S[1..L-1]:</div>
+                            <div id="segment-left" class="segment-display segment-display-left"></div>
+                        </div>
+                        <div class="segment">
+                            <div class="segment-label segment-label-range">S[L..R]:</div>
+                            <div id="segment-middle" class="segment-display segment-display-range"></div>
+                        </div>
+                        <div class="segment">
+                            <div class="segment-label segment-label-right">S[1..R]:</div>
+                            <div id="segment-right" class="segment-display segment-display-right"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Hidden section for tracking computation history (not visible) -->
+        <div style="display: none;" id="computation-steps-history"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Create and set up the PrefixSumVisualization object
+            window.PrefixSumVisualization = {
+                // Animation speed control (milliseconds)
+                animationSpeed: 1000,
+                
+                // Animation control variables
+                steps: [],
+                currentStep: 0,
+                animationInterval: null,
+                isPaused: false,
+                isAnimating: false,
+                
+                // References to key DOM elements
+                elements: {
+                    arrayContainer: null,
+                    generateRandomBtn: null,
+                    randomSizeInput: null,
+                    sortBtn: null,
+                    clearBtn: null,
+                    computePrefixSumBtn: null,
+                    resetBtn: null,
+                    originalArrayContainer: null,
+                    prefixSumArrayContainer: null,
+                    currentStepExplanation: null, // New element for current step only
+                    computationStepsHistory: null, // Hidden element for history
+                    controlsSection: null,
+                    speedSlider: null,
+                    speedValue: null,
+                    progressTracker: null
+                },
+                
+                // Initialize the application
+                init() {
+                    this.cacheElements();
+                    this.setupEventListeners();
+                    this.generateRandomArray();
+                    
+                    // Track which slider was moved last
+                    this.lastSliderMoved = 'left';
+                    if (this.elements.rangeSliderLeft) {
+                        this.elements.rangeSliderLeft.addEventListener('input', () => {
+                            this.lastSliderMoved = 'left';
+                        });
+                    }
+                    if (this.elements.rangeSliderRight) {
+                        this.elements.rangeSliderRight.addEventListener('input', () => {
+                            this.lastSliderMoved = 'right';
+                        });
+                    }
+                },
+                  // Cache DOM elements for later use
+                cacheElements() {
+                    this.elements.arrayContainer = document.getElementById('array-container');
+                    this.elements.generateRandomBtn = document.getElementById('random-btn');
+                    this.elements.randomSizeInput = document.getElementById('random-size');
+                    this.elements.sortBtn = document.getElementById('sort-btn');
+                    this.elements.clearBtn = document.getElementById('clear-btn');
+                    this.elements.computePrefixSumBtn = document.getElementById('compute-btn');
+                    this.elements.resetBtn = document.getElementById('reset-btn');
+                    this.elements.originalArrayContainer = document.getElementById('original-array');
+                    this.elements.prefixSumArrayContainer = document.getElementById('prefix-sum-array');
+                    this.elements.currentStepExplanation = document.getElementById('current-step-explanation');
+                    this.elements.computationStepsHistory = document.getElementById('computation-steps-history');
+                    this.elements.controlsSection = document.getElementById('controls-section');
+                    this.elements.speedSlider = document.getElementById('speed');
+                    this.elements.speedValue = document.getElementById('speed-value');
+                    this.elements.progressTracker = document.getElementById('progress-tracker');
+                    
+                    // Query section elements
+                    this.elements.querySection = document.getElementById('query-section');
+                    this.elements.queryLInput = document.getElementById('query-left');
+                    this.elements.queryRInput = document.getElementById('query-right');
+                    this.elements.executeQueryBtn = document.getElementById('query-btn');
+                    this.elements.rangeSliderLeft = document.getElementById('range-left');
+                    this.elements.rangeSliderRight = document.getElementById('range-right');
+                    this.elements.rangeLabels = document.getElementById('range-labels');
+                    this.elements.formulaSR = document.getElementById('formula-sr');
+                    this.elements.formulaSL1 = document.getElementById('formula-sl-1');                    this.elements.formulaResult = document.getElementById('formula-result');                    this.elements.queryOriginalArray = document.getElementById('query-original-array');
+                    this.elements.queryHighlightArray = document.getElementById('query-highlight-array');
+                    this.elements.queryPrefixSumArray = document.getElementById('query-prefix-sum-array');
+                    this.elements.queryArrays = document.querySelector('.query-arrays');
+                    this.elements.segmentLeft = document.getElementById('segment-left');
+                    this.elements.segmentMiddle = document.getElementById('segment-middle');
+                    this.elements.segmentRight = document.getElementById('segment-right');
+                },
+                
+                // Set up event listeners
+                setupEventListeners() {
+                    // Generate random array button
+                    if (this.elements.generateRandomBtn) {
+                        this.elements.generateRandomBtn.addEventListener('click', () => {
+                            const size = this.elements.randomSizeInput ? parseInt(this.elements.randomSizeInput.value) : 8;
+                            this.generateRandomArray(size);
+                        });
+                    }
+                    
+                    // Sort array button (Shuffle)
+                    if (this.elements.sortBtn) {
+                        this.elements.sortBtn.addEventListener('click', () => {
+                            this.shuffleArray();
+                        });
+                    }
+                    
+                    // Clear array button
+                    if (this.elements.clearBtn) {
+                        this.elements.clearBtn.addEventListener('click', () => {
+                            this.clearArray();
+                        });
+                    }
+                    
+                    // Compute prefix sum button
+                    if (this.elements.computePrefixSumBtn) {
+                        this.elements.computePrefixSumBtn.addEventListener('click', () => {
+                            this.computeAndVisualizePrefixSum();
+                        });
+                    }
+                    
+                    // Reset button
+                    if (this.elements.resetBtn) {
+                        this.elements.resetBtn.addEventListener('click', () => {
+                            this.resetVisualization();
+                        });
+                    }
+                    
+                    // Animation speed control
+                    if (this.elements.speedSlider) {
+                        this.elements.speedSlider.addEventListener('input', () => {
+                            const speedValue = this.elements.speedSlider.value;
+                            this.animationSpeed = parseInt(speedValue);
+                            this.elements.speedValue.textContent = (speedValue / 1000) + 's';
+                            
+                            // Update interval if animation is running
+                            if (this.animationInterval) {
+                                clearInterval(this.animationInterval);
+                                if (!this.isPaused) {
+                                    this.animationInterval = setInterval(() => this.nextStep(), this.animationSpeed);
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Execute query button
+                    if (this.elements.executeQueryBtn) {
+                        this.elements.executeQueryBtn.addEventListener('click', () => {
+                            this.executeAndVisualizeQuery();
+                        });
+                    }
+                    
+                    // Range sliders for query
+                    if (this.elements.rangeSliderLeft && this.elements.rangeSliderRight) {
+                        this.elements.rangeSliderLeft.addEventListener('input', () => {
+                            this.updateQueryFromSliders();
+                        });
+                        
+                        this.elements.rangeSliderRight.addEventListener('input', () => {
+                            this.updateQueryFromSliders();
+                        });
+                    }
+                    
+                    // Manual query input
+                    if (this.elements.queryLInput && this.elements.queryRInput) {
+                        this.elements.queryLInput.addEventListener('change', () => {
+                            this.updateSlidersFromQuery();
+                        });
+                        
+                        this.elements.queryRInput.addEventListener('change', () => {
+                            this.updateSlidersFromQuery();
+                        });
+                    }
+                    
+                    // Add item button
+                    const addBtn = this.elements.arrayContainer ? 
+                        this.elements.arrayContainer.querySelector('.add-item-btn') : null;
+                    
+                    if (addBtn) {
+                        addBtn.addEventListener('click', () => {
+                            this.addArrayElement();
+                        });
+                    }
+                    
+                    // Set up event delegation for array item interactions
+                    if (this.elements.arrayContainer) {
+                        this.elements.arrayContainer.addEventListener('click', (e) => {
+                            if (e.target.classList.contains('remove-item-btn')) {
+                                const arrayItem = e.target.closest('.array-item');
+                                if (arrayItem) {
+                                    this.removeArrayElement(arrayItem);
+                                }
+                            }
+                        });
+                    }
+                },
+                
+                // Generate a random array
+                generateRandomArray(size = 8) {
+                    // Random array utility function
+                    const generateRandomArray = (size, min, max) => {
+                        const arr = [];
+                        for (let i = 0; i < size; i++) {
+                            arr.push(Math.floor(Math.random() * (max - min + 1)) + min);
+                        }
+                        return arr;
+                    };
+                    
+                    const randomArray = generateRandomArray(size, 1, 10);
+                    
+                    // Clear the existing array container
+                    this.clearArrayContainer();
+                    
+                    // Create array items for each element
+                    randomArray.forEach(value => {
+                        this.addArrayElement(value);
+                    });
+                    
+                    // Clear previous prefix sum and computation steps
+                    this.resetVisualization();
+                },
+                
+                // Clear the array container
+                clearArrayContainer() {
+                    if (this.elements.arrayContainer) {
+                        // Keep only the add button
+                        const addBtn = this.elements.arrayContainer.querySelector('.add-item-btn');
+                        this.elements.arrayContainer.innerHTML = '';
+                        if (addBtn) {
+                            this.elements.arrayContainer.appendChild(addBtn);
+                        } else {
+                            // If add button was removed, create a new one
+                            const newAddBtn = document.createElement('div');
+                            newAddBtn.className = 'add-item-btn';
+                            newAddBtn.textContent = '+';
+                            this.elements.arrayContainer.appendChild(newAddBtn);
+                            
+                            // Add event listener to the new button
+                            newAddBtn.addEventListener('click', () => {
+                                this.addArrayElement();
+                            });
+                        }
+                    }
+                },
+                
+                // Clear the array
+                clearArray() {
+                    this.clearArrayContainer();
+                    this.resetVisualization();
+                },
+                  // Reset the visualization components
+                resetVisualization() {
+                    if (this.elements.prefixSumArrayContainer) {
+                        this.elements.prefixSumArrayContainer.innerHTML = '';
+                    }
+                    
+                    if (this.elements.currentStepExplanation) {
+                        this.elements.currentStepExplanation.innerHTML = '<div class="initial-message">Nhấn "Tính mảng cộng dồn" để xem quá trình tính toán</div>';
+                    }
+                    
+                    if (this.elements.computationStepsHistory) {
+                        this.elements.computationStepsHistory.innerHTML = '';
+                    }
+                    
+                    // Hide query section
+                    if (this.elements.querySection) {
+                        this.elements.querySection.style.display = 'none';
+                    }
+                    
+                    // Clear any animations
+                    clearInterval(this.animationInterval);
+                    this.isAnimating = false;
+                    this.steps = [];
+                    this.currentStep = 0;
+                    
+                    // Hide controls section
+                    if (this.elements.controlsSection) {
+                        this.elements.controlsSection.style.display = 'none';
+                    }
+                    
+                    // Remove step controls if they exist
+                    const stepControls = document.querySelector('.step-controls');
+                    if (stepControls) {
+                        stepControls.remove();
+                    }
+                },
+                
+                // Add an array element to the UI
+                addArrayElement(value = 0) {
+                    if (!this.elements.arrayContainer) return;
+                    
+                    // Create array item
+                    const arrayItem = document.createElement('div');
+                    arrayItem.className = 'array-item';
+                    
+                    // Create input for the value
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.className = 'array-value';
+                    input.value = value;
+                    input.min = 0;
+                    input.max = 99;
+                    
+                    // Create remove button
+                    const removeBtn = document.createElement('div');
+                    removeBtn.className = 'remove-item-btn';
+                    removeBtn.innerHTML = '&times;';
+                    
+                    // Append to array item
+                    arrayItem.appendChild(input);
+                    arrayItem.appendChild(removeBtn);
+                    
+                    // Find add button
+                    const addBtn = this.elements.arrayContainer.querySelector('.add-item-btn');
+                    
+                    // Insert before the add button if found, otherwise append to container
+                    if (addBtn) {
+                        this.elements.arrayContainer.insertBefore(arrayItem, addBtn);
+                    } else {
+                        this.elements.arrayContainer.appendChild(arrayItem);
+                    }
+                    
+                    // Add event listener to remove button
+                    removeBtn.addEventListener('click', () => {
+                        this.removeArrayElement(arrayItem);
+                        
+                        // Reset visualizations since array changed
+                        this.resetVisualization();
+                    });
+                },
+                
+                // Remove an array element from the UI
+                removeArrayElement(arrayItem) {
+                    if (this.elements.arrayContainer && arrayItem) {
+                        this.elements.arrayContainer.removeChild(arrayItem);
+                    }
+                },
+                
+                // Get the array from the UI inputs
+                getArrayFromUI() {
+                    if (!this.elements.arrayContainer) return [];
+                    
+                    const arrayItems = this.elements.arrayContainer.querySelectorAll('.array-item');
+                    const array = [];
+                    
+                    arrayItems.forEach(item => {
+                        const input = item.querySelector('.array-value');
+                        if (input) {
+                            const value = parseInt(input.value) || 0;
+                            array.push(value);
+                        }
+                    });
+                    
+                    return array;
+                },
+                  // Compute and visualize prefix sum
+                computeAndVisualizePrefixSum() {
+                    // Check if already animating
+                    if (this.isAnimating) return;
+                    
+                    const array = this.getArrayFromUI();
+                    if (array.length === 0) {
+                        alert('Vui lòng nhập ít nhất một phần tử cho mảng!');
+                        return;
+                    }
+                    
+                    // Reset visualization
+                    this.resetVisualization();
+                    this.isAnimating = true;
+                    
+                    // Visualize the original array
+                    this.visualizeOriginalArray(array);
+                    
+                    // Initialize the prefix sum calculator
+                    this.initializePrefixSum(array);
+                    
+                    // Show controls section
+                    if (this.elements.controlsSection) {
+                        this.elements.controlsSection.style.display = 'block';
+                    }
+                    
+                    // Create step controls
+                    this.createStepControls();
+                    
+                    // Generate steps for visualization
+                    this.prepareAnimationSteps();
+                    
+                    // Start the animation
+                    this.startAnimation();
+                    
+                    // Update query range sliders with the new array size
+                    this.updateQueryRangeControls(array.length);
+                },
+                
+                // Initialize prefix sum calculation
+                initializePrefixSum(array) {
+                    // Store original array
+                    this.originalArray = [...array];
+                    
+                    // Calculate prefix sum
+                    this.prefixSumArray = [0]; // Start with S[0] = 0
+                    let sum = 0;
+                    
+                    for (let i = 0; i < array.length; i++) {
+                        sum += array[i];
+                        this.prefixSumArray.push(sum);
+                    }
+                    
+                    // Generate computation steps
+                    this.computationSteps = [];
+                    
+                    // Add initial step S[0] = 0
+                    this.computationSteps.push({
+                        position: 0,
+                        value: 0,
+                        currentPrefixSum: 0,
+                        previousPrefixSum: 0,
+                        originalPosition: -1
+                    });
+                    
+                    // Add steps for each calculation
+                    for (let i = 0; i < array.length; i++) {
+                        this.computationSteps.push({
+                            position: i + 1,
+                            value: array[i],
+                            currentPrefixSum: this.prefixSumArray[i + 1],
+                            previousPrefixSum: this.prefixSumArray[i],
+                            originalPosition: i
+                        });
+                    }
+                },
+                
+                // Create step controls for animation
+                createStepControls() {
+                    // Remove existing controls if any
+                    const existingControls = document.querySelector('.step-controls');
+                    if (existingControls) {
+                        existingControls.remove();
+                    }
+                    
+                    // Create new controls
+                    const controlsDiv = document.createElement("div");
+                    controlsDiv.className = "step-controls";
+                    controlsDiv.innerHTML = `
+                        <button id="start-btn" title="Đi đến bước đầu tiên"><i>⏮</i> Bắt đầu</button>
+                        <button id="prev-step" disabled title="Đi đến bước trước đó"><i>◀</i> Lùi</button>
+                        <button id="pause-animation" title="Tạm dừng/Tiếp tục hoạt hình"><i>⏯</i> Tạm dừng</button>
+                        <button id="next-step" disabled title="Đi đến bước tiếp theo">Tiếp <i>▶</i></button>
+                        <button id="finish-btn" title="Bỏ qua đến kết quả cuối cùng"><i>⏭</i> Kết thúc</button>
+                    `;
+                    
+                    // Insert into step-controls-container
+                    const container = document.getElementById('step-controls-container');
+                    if (container) {
+                        container.appendChild(controlsDiv);
+                    }
+                    
+                    // Set up button click handlers
+                    document.getElementById("start-btn").addEventListener("click", () => this.goToStart());
+                    document.getElementById("prev-step").addEventListener("click", () => this.prevStep());
+                    document.getElementById("pause-animation").addEventListener("click", () => this.togglePause());
+                    document.getElementById("next-step").addEventListener("click", () => {
+                        if (this.currentStep < this.steps.length - 1) {
+                            this.nextStep(true); // Pass true to indicate manual navigation
+                        }
+                    });
+                    document.getElementById("finish-btn").addEventListener("click", () => this.skipToFinish());
+                },
+                
+                // Prepare animation steps
+                prepareAnimationSteps() {
+                    this.steps = [];
+                    
+                    // Add initial state step
+                    this.steps.push({
+                        prefixSum: [0], // Start with just S[0] = 0
+                        currentPrefixSumIndex: 0,
+                        originalArrayIndex: -1, // No element highlighted yet
+                        explanation: ['Bắt đầu tính toán mảng cộng dồn', 'S[0] = 0 (khởi tạo)']
+                    });
+                    
+                    // Add steps for each computation
+                    for (let i = 1; i < this.computationSteps.length; i++) {
+                        const step = this.computationSteps[i];
+                        
+                        // Create a copy of the prefix sum array up to the current position
+                        const currentPrefixSum = this.prefixSumArray.slice(0, step.position + 1);
+                        
+                        this.steps.push({
+                            prefixSum: currentPrefixSum,
+                            currentPrefixSumIndex: step.position,
+                            originalArrayIndex: step.originalPosition,
+                            explanation: [
+                                `S[${step.position}] = S[${step.position-1}] + A[${step.originalPosition + 1}]`,
+                                `S[${step.position}] = ${step.previousPrefixSum} + ${step.value} = ${step.currentPrefixSum}`
+                            ]
+                        });
+                    }
+                    
+                    this.currentStep = 0;
+                },
+                
+                // Start the animation
+                startAnimation() {
+                    // Clear any existing animation
+                    clearInterval(this.animationInterval);
+                    this.isPaused = false;
+                    
+                    // Reset UI controls
+                    const pauseBtn = document.getElementById("pause-animation");
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    
+                    if (pauseBtn) {
+                        pauseBtn.textContent = "⏯ Tạm dừng";
+                        pauseBtn.classList.remove("paused");
+                    }
+                    
+                    if (prevBtn) prevBtn.disabled = true;
+                    if (nextBtn) nextBtn.disabled = true;
+                    
+                    this.currentStep = 0;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // Start the animation timer
+                    this.animationInterval = setInterval(() => this.nextStep(), this.animationSpeed);
+                },
+                
+                // Toggle animation pause state
+                togglePause() {
+                    const pauseBtn = document.getElementById("pause-animation");
+                    
+                    if (this.isPaused) {
+                        // Resume animation if we have more steps
+                        if (this.currentStep < this.steps.length - 1) {
+                            this.animationInterval = setInterval(() => this.nextStep(), this.animationSpeed);
+                        }
+                        // Update UI
+                        if (pauseBtn) {
+                            pauseBtn.textContent = "⏯ Tạm dừng";
+                            pauseBtn.classList.remove("paused");
+                        }
+                    } else {
+                        // Pause animation
+                        clearInterval(this.animationInterval);
+                        // Update UI
+                        if (pauseBtn) {
+                            pauseBtn.textContent = "⏯ Tiếp tục";
+                            pauseBtn.classList.add("paused");
+                        }
+                    }
+                    
+                    this.isPaused = !this.isPaused;
+                    
+                    // Enable navigation buttons when paused, with proper boundary checks
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    
+                    if (prevBtn) prevBtn.disabled = !this.isPaused || this.currentStep <= 0;
+                    if (nextBtn) nextBtn.disabled = !this.isPaused || this.currentStep >= this.steps.length - 1;
+                },
+                
+                // Go to first step
+                goToStart() {
+                    clearInterval(this.animationInterval);
+                    this.currentStep = 0;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // Update button states
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    const pauseBtn = document.getElementById("pause-animation");
+                    
+                    if (prevBtn) prevBtn.disabled = true;
+                    if (nextBtn) nextBtn.disabled = false;
+                    if (pauseBtn) {
+                        pauseBtn.textContent = "⏯ Tiếp tục";
+                        pauseBtn.classList.add("paused");
+                    }
+                    
+                    this.isPaused = true;
+                },
+                
+                // Skip to finish
+                skipToFinish() {
+                    clearInterval(this.animationInterval);
+                    this.currentStep = this.steps.length - 1;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // Update button states
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    const pauseBtn = document.getElementById("pause-animation");
+                    
+                    if (prevBtn) prevBtn.disabled = false;
+                    if (nextBtn) nextBtn.disabled = true;
+                    if (pauseBtn) {
+                        pauseBtn.textContent = "⏯ Tiếp tục";
+                        pauseBtn.classList.add("paused");
+                    }
+                    
+                    this.isPaused = true;
+                },
+                
+                // Move to the next step in animation
+                nextStep(isManual = false) {
+                    // Prevent stepping beyond array bounds
+                    if (this.currentStep >= this.steps.length - 1) {
+                        // If at the last step, stop the animation
+                        clearInterval(this.animationInterval);
+                        this.updateProgressTracker();
+                        return;
+                    }
+                    
+                    this.currentStep++;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // If manual navigation, update button states
+                    if (isManual) {
+                        const prevBtn = document.getElementById("prev-step");
+                        const nextBtn = document.getElementById("next-step");
+                        
+                        if (prevBtn) prevBtn.disabled = this.currentStep <= 0;
+                        if (nextBtn) nextBtn.disabled = this.currentStep >= this.steps.length - 1;
+                    }
+                },
+                
+                // Move to the previous step in animation
+                prevStep() {
+                    // Prevent stepping before first step
+                    if (this.currentStep <= 0) return;
+                    
+                    this.currentStep--;
+                    this.displayStep();
+                    this.updateProgressTracker();
+                    
+                    // Update button states
+                    const prevBtn = document.getElementById("prev-step");
+                    const nextBtn = document.getElementById("next-step");
+                    
+                    if (nextBtn) nextBtn.disabled = false; // Next is always available if we went back
+                    if (prevBtn) prevBtn.disabled = this.currentStep <= 0;
+                },
+                
+                // Update the progress tracker display
+                updateProgressTracker() {
+                    if (this.elements.progressTracker) {
+                        this.elements.progressTracker.textContent = `Bước ${this.currentStep + 1} / ${this.steps.length}`;
+                    }
+                },
+                  // Display the current step
+                displayStep() {
+                    if (this.steps.length === 0 || this.currentStep >= this.steps.length) return;
+                    
+                    const step = this.steps[this.currentStep];
+                    
+                    // Visualize the current state of the prefix sum array
+                    this.visualizePrefixSumArray(step.prefixSum);
+                    
+                    // Highlight the relevant elements
+                    this.removeAllHighlights();
+                    
+                    // For step > 0, animate the calculation
+                    if (this.currentStep > 0 && step.originalArrayIndex >= 0 && step.currentPrefixSumIndex >= 0) {
+                        // First highlight the original array element being added
+                        const originalElement = this.highlightArrayElement('original-array', step.originalArrayIndex);
+                        
+                        // Then highlight the previous sum element
+                        const prevSumIndex = step.currentPrefixSumIndex - 1;
+                        const prevSumElement = this.highlightArrayElement('prefix-sum-array', prevSumIndex);
+                        
+                        // Finally highlight the current sum element with a pulse animation
+                        const currentSumElement = this.highlightArrayElement('prefix-sum-array', step.currentPrefixSumIndex);
+                        
+                        if (currentSumElement) {
+                            currentSumElement.classList.add('pulse-animation');
+                            // Remove animation class after animation completes
+                            setTimeout(() => {
+                                if (currentSumElement) {
+                                    currentSumElement.classList.remove('pulse-animation');
+                                }
+                            }, 500);
+                        }
+                    } else if (this.currentStep === 0 && step.currentPrefixSumIndex >= 0) {
+                        // Just highlight S[0] for the initial step
+                        const initialElement = this.highlightArrayElement('prefix-sum-array', 0);
+                        if (initialElement) {
+                            initialElement.classList.add('pulse-animation');
+                            setTimeout(() => {
+                                if (initialElement) {
+                                    initialElement.classList.remove('pulse-animation');
+                                }
+                            }, 500);
+                        }
+                    }
+                    
+                    // Update the CURRENT STEP explanation display
+                    this.displayCurrentStepExplanation(step);
+                    
+                    // Record step in history (hidden)
+                    this.recordStepInHistory(step);
+                },
+                
+                // Remove all highlights
+                removeAllHighlights() {
+                    const elements = document.querySelectorAll('.array-element');
+                    elements.forEach(el => {
+                        el.classList.remove('active');
+                    });
+                },
+                  // Display current step explanation
+                displayCurrentStepExplanation(step) {
+                    if (!this.elements.currentStepExplanation) return;
+                    
+                    // Clear current explanation
+                    this.elements.currentStepExplanation.innerHTML = '';
+                    
+                    const stepElement = document.createElement('div');
+                    stepElement.className = 'computation-step active';
+                    
+                    // Add explanation lines for the CURRENT step only
+                    if (step.explanation && step.explanation.length) {
+                        // Format the explanation with colored formula parts
+                        const formattedExplanation = step.explanation.map(line => {
+                            // Replace S[i] patterns with colored spans
+                            let formattedLine = line.replace(/S\[(\d+)\]/g, '<span class="formula-part formula-S">S[$1]</span>');
+                            // Replace A[i] patterns with colored spans
+                            formattedLine = formattedLine.replace(/A\[(\d+)\]/g, '<span class="formula-part formula-A">A[$1]</span>');
+                            return formattedLine;
+                        });
+
+                        const explanationHtml = `
+                            <div class="step-explanation">
+                                <ul>
+                                    ${formattedExplanation.map(line => `<li class="explanation-line active">${line}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                        stepElement.innerHTML = explanationHtml;
+                    }
+                    
+                    // Add to the current step explanation container
+                    this.elements.currentStepExplanation.appendChild(stepElement);
+                },
+                
+                // Record step in history (hidden)
+                recordStepInHistory(step) {
+                    if (!this.elements.computationStepsHistory) return;
+                    
+                    // Clear history if this is the first step
+                    if (this.currentStep === 0) {
+                        this.elements.computationStepsHistory.innerHTML = '';
+                    }
+                    
+                    const stepElement = document.createElement('div');
+                    stepElement.className = 'computation-step';
+                    
+                    // Add step to history with all previous steps
+                    if (step.explanation && step.explanation.length) {
+                        const explanationHtml = `
+                            <div class="step-explanation">
+                                <ul>
+                                    ${step.explanation.map(line => `<li>${line}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                        stepElement.innerHTML = explanationHtml;
+                    }
+                    
+                    this.elements.computationStepsHistory.appendChild(stepElement);
+                },
+                  // Visualize the original array
+                visualizeOriginalArray(array) {
+                    if (!this.elements.originalArrayContainer) return;
+                    
+                    this.elements.originalArrayContainer.innerHTML = '';
+                    
+                    // Add invisible placeholder for index 0 to align with prefix sum array
+                    const placeholderElement = document.createElement('div');
+                    placeholderElement.className = 'placeholder-element';
+                    this.elements.originalArrayContainer.appendChild(placeholderElement);
+                    
+                    // Create and append array elements
+                    array.forEach((value, index) => {
+                        const element = document.createElement('div');
+                        element.className = 'array-element original-array-element';
+                        
+                        // Create value span
+                        const valueSpan = document.createElement('span');
+                        valueSpan.className = 'element-value';
+                        valueSpan.textContent = value;
+                        element.appendChild(valueSpan);
+                        
+                        // Create index span
+                        const indexSpan = document.createElement('span');
+                        indexSpan.className = 'element-index original-array-index';
+                        indexSpan.textContent = index + 1; // 1-indexed display
+                        element.appendChild(indexSpan);
+                        
+                        this.elements.originalArrayContainer.appendChild(element);
+                    });
+                },
+                  // Visualize the prefix sum array
+                visualizePrefixSumArray(prefixSumArray) {
+                    if (!this.elements.prefixSumArrayContainer) return;
+                    
+                    this.elements.prefixSumArrayContainer.innerHTML = '';
+                    
+                    // Create and append array elements - MAKE SURE TO INCLUDE INDEX 0
+                    prefixSumArray.forEach((value, index) => {
+                        const element = document.createElement('div');
+                        element.className = 'array-element prefix-sum-array-element';
+                        
+                        const valueSpan = document.createElement('span');
+                        valueSpan.className = 'element-value';
+                        valueSpan.textContent = value;
+                        
+                        const indexSpan = document.createElement('span');
+                        indexSpan.className = 'element-index prefix-sum-array-index';
+                        indexSpan.textContent = index; // 0-indexed for prefix sum
+                        
+                        element.appendChild(valueSpan);
+                        element.appendChild(indexSpan);
+                        
+                        this.elements.prefixSumArrayContainer.appendChild(element);
+                    });
+                },
+                  // Highlight an element in an array visualization
+                highlightArrayElement(containerId, index) {
+                    const container = document.getElementById(containerId);
+                    if (!container) return null;
+                    
+                    const elements = container.querySelectorAll('.array-element');
+                    
+                    // Add highlight to the specified element
+                    if (index >= 0 && index < elements.length) {
+                        elements[index].classList.add('active');
+                        return elements[index]; // Return the element for animation chaining
+                    }
+                    
+                    return null;
+                },
+                
+                // Shuffle the current array
+                shuffleArray() {
+                    // Utility function to shuffle array
+                    const shuffleArray = (array) => {
+                        const newArray = [...array];
+                        for (let i = newArray.length - 1; i > 0; i--) {
+                            const j = Math.floor(Math.random() * (i + 1));
+                            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                        }
+                        return newArray;
+                    };
+                    
+                    // Get current array from UI
+                    const array = this.getArrayFromUI();
+                    if (array.length === 0) {
+                        alert('Vui lòng nhập ít nhất một phần tử cho mảng!');
+                        return;
+                    }
+                    
+                    // Shuffle the array
+                    const shuffledArray = shuffleArray(array);
+                    
+                    // Update the UI with shuffled array
+                    this.updateArrayItemsInUI(shuffledArray);
+                    
+                    // Reset visualizations since array changed
+                    this.resetVisualization();
+                },
+                
+                // Update array items in the UI with new values
+                updateArrayItemsInUI(array) {
+                    if (!this.elements.arrayContainer) return;
+                    
+                    // Remove existing array items
+                    const arrayItems = this.elements.arrayContainer.querySelectorAll('.array-item');
+                    arrayItems.forEach(item => item.remove());
+                    
+                    // Add new array items
+                    array.forEach(value => {
+                        this.addArrayElement(value);
+                    });
+                },
+                
+                // Execute and visualize a range sum query
+                executeAndVisualizeQuery() {
+                    if (!this.prefixSumArray || this.prefixSumArray.length <= 1) {
+                        alert('Vui lòng tính mảng cộng dồn trước!');
+                        return;
+                    }
+                    
+                    // Get query range values
+                    const left = parseInt(this.elements.queryLInput.value);
+                    const right = parseInt(this.elements.queryRInput.value);
+                    
+                    // Validate range
+                    if (isNaN(left) || isNaN(right) || left < 1 || right < left || right > this.originalArray.length) {
+                        alert(`Vui lòng nhập giá trị L và R hợp lệ (1 ≤ L ≤ R ≤ ${this.originalArray.length})`);
+                        return;
+                    }
+                    
+                    // Calculate range sum
+                    const rangeSum = this.prefixSumArray[right] - this.prefixSumArray[left - 1];
+                    
+                    // Update formula display
+                    if (this.elements.formulaSR) {
+                        this.elements.formulaSR.textContent = this.prefixSumArray[right];
+                    }
+                    
+                    if (this.elements.formulaSL1) {
+                        this.elements.formulaSL1.textContent = this.prefixSumArray[left - 1];
+                    }
+                    
+                    if (this.elements.formulaResult) {
+                        this.elements.formulaResult.textContent = rangeSum;
+                    }
+                    
+                    // Visualize the query on original array
+                    this.visualizeQueryOnOriginalArray(left, right);
+                    
+                    // Visualize the array segments
+                    this.visualizeArraySegments(left, right);
+                },
+                  // Visualize the query on the original array
+                visualizeQueryOnOriginalArray(left, right) {
+                    if (!this.elements.queryOriginalArray || !this.elements.queryHighlightArray || !this.elements.queryPrefixSumArray) return;
+                    
+                    // Clear previous visualizations
+                    this.elements.queryOriginalArray.innerHTML = '';
+                    this.elements.queryHighlightArray.innerHTML = '';
+                    this.elements.queryPrefixSumArray.innerHTML = '';
+                    
+                    // Set CSS variables for L and R positions
+                    document.documentElement.style.setProperty('--L-position', left - 1);
+                    document.documentElement.style.setProperty('--R-position', right - 1);
+                    
+                    // Add placeholder for index 0 in original array to align with prefix sum
+                    const placeholderElement = document.createElement('div');
+                    placeholderElement.className = 'placeholder-element';
+                    this.elements.queryOriginalArray.appendChild(placeholderElement);
+                    
+                    // Add L marker to query arrays container
+                    const lMarker = document.createElement('div');
+                    lMarker.className = 'boundary-marker L-marker';
+                    lMarker.textContent = 'L=' + left;
+                    this.elements.queryArrays.appendChild(lMarker);
+                    
+                    // Add R marker to query arrays container
+                    const rMarker = document.createElement('div');
+                    rMarker.className = 'boundary-marker R-marker';
+                    rMarker.textContent = 'R=' + right;
+                    this.elements.queryArrays.appendChild(rMarker);
+                    
+                    // Create a highlighting array
+                    const highlightArray = Array(this.originalArray.length).fill(0);
+                    for (let i = left - 1; i < right; i++) {
+                        highlightArray[i] = 1; // Mark elements in the query range
+                    }
+                    
+                    // Visualize the original array with range highlighting
+                    this.originalArray.forEach((value, index) => {
+                        // Create element for original array
+                        const element = document.createElement('div');
+                        element.className = 'array-element original-array-element';
+                        if (index >= left - 1 && index < right) {
+                            element.classList.add('active'); // Highlight elements in range
+                        }
+                        
+                        // Create value span
+                        const valueSpan = document.createElement('span');
+                        valueSpan.className = 'element-value';
+                        valueSpan.textContent = value;
+                        element.appendChild(valueSpan);
+                        
+                        // Create index span
+                        const indexSpan = document.createElement('span');
+                        indexSpan.className = 'element-index original-array-index';
+                        indexSpan.textContent = index + 1; // 1-indexed display
+                        element.appendChild(indexSpan);
+                        
+                        this.elements.queryOriginalArray.appendChild(element);
+                        
+                        // Create element for highlighting array
+                        const highlightElement = document.createElement('div');
+                        highlightElement.className = 'array-element';
+                        
+                        // Create value span with highlight indicator
+                        const highlightValueSpan = document.createElement('span');
+                        highlightValueSpan.className = 'element-value';
+                        highlightValueSpan.innerHTML = highlightArray[index] ? '&#x2714;' : '&#x2716;'; // Checkmark or X
+                        highlightValueSpan.style.color = highlightArray[index] ? '#2ecc71' : '#e74c3c';
+                        highlightElement.appendChild(highlightValueSpan);
+                        
+                        this.elements.queryHighlightArray.appendChild(highlightElement);
+                    });
+                    
+                    // Add a copy of the prefix sum array to the query section
+                    // First, add the S[0] element
+                    const s0Element = document.createElement('div');
+                    s0Element.className = 'array-element prefix-sum-array-element';
+                    const s0ValueSpan = document.createElement('span');
+                    s0ValueSpan.className = 'element-value';
+                    s0ValueSpan.textContent = '0';
+                    const s0IndexSpan = document.createElement('span');
+                    s0IndexSpan.className = 'element-index prefix-sum-array-index';
+                    s0IndexSpan.textContent = '0';
+                    s0Element.appendChild(s0ValueSpan);
+                    s0Element.appendChild(s0IndexSpan);
+                    this.elements.queryPrefixSumArray.appendChild(s0Element);
+                    
+                    // Then add the rest of the prefix sum elements
+                    for (let i = 1; i <= this.originalArray.length; i++) {
+                        const sElement = document.createElement('div');
+                        sElement.className = 'array-element prefix-sum-array-element';
+                        
+                        // Highlight special positions (L-1, R)
+                        if (i === left - 1) {
+                            sElement.classList.add('active');
+                            sElement.style.borderColor = 'var(--query-left-color)';
+                        } else if (i === right) {
+                            sElement.classList.add('active');
+                            sElement.style.borderColor = 'var(--query-right-color)';
+                        }
+                        
+                        const sValueSpan = document.createElement('span');
+                        sValueSpan.className = 'element-value';
+                        sValueSpan.textContent = this.prefixSumArray[i];
+                        
+                        const sIndexSpan = document.createElement('span');
+                        sIndexSpan.className = 'element-index prefix-sum-array-index';
+                        sIndexSpan.textContent = i;
+                        
+                        sElement.appendChild(sValueSpan);
+                        sElement.appendChild(sIndexSpan);
+                        
+                        this.elements.queryPrefixSumArray.appendChild(sElement);
+                    }
+                },
+                  // Visualize the array segments for the query
+                visualizeArraySegments(left, right) {
+                    if (!this.elements.segmentLeft || !this.elements.segmentMiddle || !this.elements.segmentRight) return;
+                    
+                    // Clear previous visualizations
+                    this.elements.segmentLeft.innerHTML = '';
+                    this.elements.segmentMiddle.innerHTML = '';
+                    this.elements.segmentRight.innerHTML = '';
+                    
+                    // S[1..L-1] segment
+                    if (left > 1) {
+                        // Add placeholders before 1 to align with the complete array
+                        for (let i = 0; i < 1; i++) {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'segment-placeholder';
+                            this.elements.segmentLeft.appendChild(placeholder);
+                        }
+                        
+                        // Add the segment elements
+                        for (let i = 1; i < left; i++) {
+                            const element = document.createElement('div');
+                            element.className = 'segment-element segment-element-left';
+                            element.textContent = this.prefixSumArray[i];
+                            this.elements.segmentLeft.appendChild(element);
+                        }
+                        
+                        // Add the sum display
+                        const sumElement = document.createElement('div');
+                        sumElement.className = 'segment-sum segment-sum-left';
+                        sumElement.textContent = `= ${this.prefixSumArray[left-1]}`;
+                        this.elements.segmentLeft.appendChild(sumElement);
+                    } else {
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.textContent = 'Không có phần tử (L=1)';
+                        emptyMessage.className = 'empty-segment';
+                        this.elements.segmentLeft.appendChild(emptyMessage);
+                    }
+                    
+                    // S[L..R] segment (the queried range)
+                    // Add placeholders before L to align with the complete array
+                    for (let i = 0; i < left; i++) {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'segment-placeholder';
+                        this.elements.segmentMiddle.appendChild(placeholder);
+                    }
+                    
+                    // Add L boundary indicator
+                    const lBoundary = document.createElement('div');
+                    lBoundary.className = 'boundary-indicator boundary-L';
+                    lBoundary.textContent = 'L';
+                    this.elements.segmentMiddle.appendChild(lBoundary);
+                    
+                    for (let i = left; i <= right; i++) {
+                        const element = document.createElement('div');
+                        element.className = 'segment-element segment-element-range';
+                        element.textContent = this.prefixSumArray[i];
+                        this.elements.segmentMiddle.appendChild(element);
+                    }
+                    
+                    // Add R boundary indicator
+                    const rBoundary = document.createElement('div');
+                    rBoundary.className = 'boundary-indicator boundary-R';
+                    rBoundary.textContent = 'R';
+                    this.elements.segmentMiddle.appendChild(rBoundary);
+                    
+                    // Add the sum (result of subtraction)
+                    const sumElement = document.createElement('div');
+                    sumElement.className = 'segment-sum segment-sum-range';
+                    const rangeSum = this.prefixSumArray[right] - this.prefixSumArray[left - 1];
+                    sumElement.textContent = `= ${rangeSum}`;
+                    this.elements.segmentMiddle.appendChild(sumElement);
+                    
+                    // S[1..R] segment
+                    // Add placeholders before 1 to align with the complete array
+                    for (let i = 0; i < 1; i++) {
+                        const placeholder = document.createElement('div');
+                        placeholder.className = 'segment-placeholder';
+                        this.elements.segmentRight.appendChild(placeholder);
+                    }
+                    
+                    for (let i = 1; i <= right; i++) {
+                        const element = document.createElement('div');
+                        element.className = 'segment-element';
+                        
+                        // Use different colors for elements before L and from L to R
+                        if (i < left) {
+                            element.classList.add('segment-element-left');
+                        } else {
+                            element.classList.add('segment-element-range');
+                        }
+                        
+                        element.textContent = this.prefixSumArray[i];
+                        this.elements.segmentRight.appendChild(element);
+                    }
+                    
+                    // Add the sum display
+                    const rightSumElement = document.createElement('div');
+                    rightSumElement.className = 'segment-sum segment-sum-right';
+                    rightSumElement.textContent = `= ${this.prefixSumArray[right]}`;
+                    this.elements.segmentRight.appendChild(rightSumElement);
+                },                // Update query range controls based on array size
+                updateQueryRangeControls(arraySize) {
+                    if (!this.elements.querySection || !this.elements.rangeSliderLeft || 
+                        !this.elements.rangeSliderRight || !this.elements.rangeLabels) return;
+                    
+                    // Show the query section
+                    this.elements.querySection.style.display = 'block';
+                    
+                    // Update the range slider attributes
+                    this.elements.rangeSliderLeft.min = 1;
+                    this.elements.rangeSliderLeft.max = arraySize;
+                    this.elements.rangeSliderLeft.value = 1;
+                    
+                    this.elements.rangeSliderRight.min = 1;
+                    this.elements.rangeSliderRight.max = arraySize;
+                    this.elements.rangeSliderRight.value = arraySize;
+                    
+                    // Update the query input values
+                    if (this.elements.queryLInput) this.elements.queryLInput.value = 1;
+                    if (this.elements.queryRInput) this.elements.queryRInput.value = arraySize;
+                    
+                    // Generate range labels
+                    this.elements.rangeLabels.innerHTML = '';
+                    const labelCount = Math.min(arraySize, 10); // Limit the number of labels
+                    
+                    for (let i = 0; i < labelCount; i++) {
+                        const label = Math.floor(1 + i * (arraySize / (labelCount - 1)));
+                        const labelSpan = document.createElement('span');
+                        labelSpan.textContent = label;
+                        this.elements.rangeLabels.appendChild(labelSpan);
+                    }
+                    
+                    // Reset the query form
+                    if (this.elements.formulaSR) this.elements.formulaSR.textContent = '';
+                    if (this.elements.formulaSL1) this.elements.formulaSL1.textContent = '';
+                    if (this.elements.formulaResult) this.elements.formulaResult.textContent = '';
+                    
+                    if (this.elements.queryOriginalArray) this.elements.queryOriginalArray.innerHTML = '';
+                    if (this.elements.queryHighlightArray) this.elements.queryHighlightArray.innerHTML = '';
+                    if ( this.elements.queryPrefixSumArray) this.elements.queryPrefixSumArray.innerHTML = '';
+                    if (this.elements.segmentLeft) this.elements.segmentLeft.innerHTML = '';
+                    if (this.elements.segmentMiddle) this.elements.segmentMiddle.innerHTML = '';
+                    if (this.elements.segmentRight) this.elements.segmentRight.innerHTML = '';
+                    
+                    // Remove any existing boundary markers
+                    const boundaryMarkers = document.querySelectorAll('.boundary-marker, .boundary-indicator');
+                    boundaryMarkers.forEach(marker => marker.remove());
+                },
+                  // Update query inputs based on slider values
+                updateQueryFromSliders() {
+                    if (!this.elements.rangeSliderLeft || !this.elements.rangeSliderRight || 
+                        !this.elements.queryLInput || !this.elements.queryRInput) return;
+                    
+                    const leftValue = parseInt(this.elements.rangeSliderLeft.value);
+                    const rightValue = parseInt(this.elements.rangeSliderRight.value);
+                    
+                    // Ensure right slider is not less than left slider
+                    if (rightValue < leftValue) {
+                        // If right slider was the last moved, update left slider
+                        if (this.lastSliderMoved === 'right') {
+                            this.elements.rangeSliderLeft.value = rightValue;
+                            this.elements.queryLInput.value = rightValue;
+                        } else {
+                            // If left slider was the last moved, update right slider
+                            this.elements.rangeSliderRight.value = leftValue;
+                            this.elements.queryRInput.value = leftValue;
+                        }
+                    } else {
+                        // Normal case: update input values from sliders
+                        this.elements.queryLInput.value = leftValue;
+                        this.elements.queryRInput.value = rightValue;
+                    }
+                    
+                    // If query button exists, automatically execute query
+                    if (this.elements.executeQueryBtn) {
+                        this.executeAndVisualizeQuery();
+                    }
+                },
+                
+                // Update sliders based on query inputs
+                updateSlidersFromQuery() {
+                    if (!this.elements.rangeSliderLeft || !this.elements.rangeSliderRight || 
+                        !this.elements.queryLInput || !this.elements.queryRInput) return;
+                    
+                    const leftValue = parseInt(this.elements.queryLInput.value);
+                    const rightValue = parseInt(this.elements.queryRInput.value);
+                    const maxValue = parseInt(this.elements.queryLInput.max) || this.originalArray?.length || 1;
+                    
+                    // Validate inputs
+                    let validLeftValue = Math.min(Math.max(1, leftValue || 1), maxValue);
+                    let validRightValue = Math.min(Math.max(validLeftValue, rightValue || validLeftValue), maxValue);
+                    
+                    // Update inputs and sliders
+                    this.elements.queryLInput.value = validLeftValue;
+                    this.elements.queryRInput.value = validRightValue;
+                    this.elements.rangeSliderLeft.value = validLeftValue;
+                    this.elements.rangeSliderRight.value = validRightValue;
+                    
+                    // Execute query with updated values
+                    if (this.elements.executeQueryBtn) {
+                        this.executeAndVisualizeQuery();
+                    }
+                },
+            };
+            
+            // Initialize the visualization object
+            window.PrefixSumVisualization.init();
+        });
+    </script>
+</body>
+</html>

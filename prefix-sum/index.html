@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
+<head>    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minh Họa Mảng Cộng Dồn (Prefix Sum)</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="animation-styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
 </head>
@@ -42,8 +42,7 @@
             </div>
         </section>
         
-        <!-- Minh họa mảng cộng dồn -->
-        <section class="visualization-section">
+        <!-- Minh họa mảng cộng dồn -->        <section class="visualization-section">
             <h2>Minh họa mảng cộng dồn</h2>
             <div class="arrays-visualization">
                 <div class="array-row">
@@ -55,6 +54,16 @@
                     <div id="prefix-sum-array" class="array-display"></div>
                 </div>
             </div>
+            
+            <div id="animation-controls" class="animation-controls">
+                <div class="speed-control">
+                    <label for="speed">Tốc độ Hoạt hình:</label>
+                    <input type="range" id="speed" min="100" max="2000" step="100" value="1000">
+                    <span id="speed-value">1s</span>
+                </div>
+            </div>
+            
+            <div id="progress-tracker" class="progress-tracker"></div>
             
             <div class="computation-steps" id="computation-steps">
                 <div class="initial-message">Nhấn "Tính mảng cộng dồn" để xem quá trình tính toán</div>
@@ -161,15 +170,28 @@ print("Tổng đoạn [4, 7]:", query_range_sum(prefix_sum, 4, 7))  # = 8 + 6 + 
         <footer>
             <p>© 2023 Minh Họa Thuật Toán - Được tạo cho mục đích giáo dục</p>
         </footer>
-    </div>
-
-    <!-- Thư viện highlight.js để hiển thị mã nguồn -->
+    </div>    <!-- Thư viện highlight.js để hiển thị mã nguồn -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
     <script>hljs.highlightAll();</script>
-    
-    <!-- Các tập tin JavaScript -->
+      <!-- Các tập tin JavaScript -->
     <script src="array-utils.js"></script>
     <script src="prefix-sum.js"></script>
     <script src="visualization.js"></script>
+    <script src="animation-controls.js"></script>
+    <script>
+        // This is a fix for the animation controls
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                if (!document.querySelector('.step-controls') && PrefixSumVisualization) {
+                    console.log('Adding animation controls');
+                    
+                    // Call the createStepControls method if it exists
+                    if (typeof PrefixSumVisualization.createStepControls === 'function') {
+                        PrefixSumVisualization.createStepControls();
+                    }
+                }
+            }, 500);
+        });
+    </script>
 </body>
 </html>

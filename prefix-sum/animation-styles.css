@@ -1,0 +1,124 @@
+/**
+ * CSS styles for the prefix sum visualization
+ * 
+ * This adds support for animation controls and aligns the array indices
+ */
+
+/* Additional animation controls */
+.animation-controls {
+    display: none;
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f0f8ff;
+    border-radius: 8px;
+    border: 1px solid #d0e3f0;
+}
+
+.animation-controls.visible {
+    display: block;
+}
+
+.speed-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.speed-control label {
+    font-weight: bold;
+    min-width: 150px;
+}
+
+.speed-control input[type="range"] {
+    flex: 1;
+}
+
+.progress-tracker {
+    margin: 10px 0;
+    text-align: center;
+    font-weight: bold;
+    color: var(--primary-color);
+    min-height: 24px;
+}
+
+.step-controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.step-controls button {
+    padding: 8px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s;
+}
+
+.step-controls button:hover {
+    background-color: #2980b9;
+}
+
+.step-controls button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.step-controls button.paused {
+    background-color: #f39c12;
+}
+
+/* Animation Step Styling */
+.computation-step {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-left: 4px solid var(--primary-color);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.computation-step.active {
+    opacity: 1;
+    border-left-color: var(--secondary-color);
+}
+
+.explanation-line {
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+}
+
+.explanation-line.active {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Ensure prefix sum array starts with index 1 alignment */
+.prefix-sum-row .array-element:first-child {
+    visibility: hidden;
+    width: 0;
+    margin-right: -10px; /* Adjust as needed */
+}
+
+/* Ensure both arrays align properly */
+.arrays-visualization {
+    display: flex;
+    flex-direction: column;
+}
+
+.array-row {
+    display: flex;
+    align-items: center;
+}
+
+.array-label {
+    min-width: 30px;
+    margin-right: 10px;
+}
