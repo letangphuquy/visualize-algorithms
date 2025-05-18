@@ -1,0 +1,16 @@
+!!! danger "Lý thuyết"
+    0. $\gcd(a,b) = \gcd(b,a)$. Tương tự, $\text{lcm}(a,b) = \text{lcm}(b,a)$. **Đặc biệt:** $\gcd(0,a) = a$
+    3. $\gcd(a,b) \times \text{lcm}(a,b) = a \times b$
+    4. Có thể dùng thuật toán Euclid để tìm nhanh UCLN của hai số.
+        - Nếu $d$ là ước chung của $a,b$ thì $a+b$ và $a-b$ chia hết $d$.
+    5. Ta có tính chất: Nếu $g$ là UCLN của $a,b$ thì ta có thể viết:
+        - $a = g\cdot x$
+        - $b = g\cdot y$
+        - Trong đó $x,y$ là hai số nguyên, $x,y$ "nguyên tố cùng nhau" (tức $\gcd(x,y) = 1$) 
+    Tương tự, nếu $m$ là BCNN của $a,b$ thì ta viết:
+        - $m = a\cdot u$
+        - $m = b\cdot v$
+        - Trong đó $u,v$ nguyên tố cùng nhau.
+        
+??? success "Lời giải"
+    https://hackmd.io/@lqdoj/cd2_5_uocchung

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ước Số và Bội Số - Trực quan</title>
+    <link rel="stylesheet" href="0-presentation.css">
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="controls">
+            <button id="prev-btn" class="nav-btn">Trước</button>
+            <button id="next-btn" class="nav-btn">Tiếp</button>
+            <button id="play-btn" class="nav-btn">Phát</button>
+            <button id="pause-btn" class="nav-btn" style="display:none;">Tạm dừng</button>
+            <div id="progress-bar">
+                <div id="progress-indicator"></div>
+            </div>
+            <span id="timer">00:00</span>
+        </div>
+
+        <!-- Các slide trong presentation -->
+        <div id="slides-container">
+            <!-- Slide 1: Giới thiệu -->
+            <div class="slide" data-duration="30">
+                <h1>Ước Số và Bội Số</h1>
+                <h2>Nền Tảng của Lý Thuyết Số</h2>
+                <div id="intro-animation" class="animation-container"></div>
+            </div>
+
+            <!-- Slide 2: Định nghĩa -->
+            <div class="slide" data-duration="60">
+                <h2>Khái niệm cơ bản</h2>
+                <div id="definition-animation" class="animation-container"></div>
+                <div class="text-box">
+                    <p>Khi 12 chia cho 3 được 4 dư 0, chúng ta nói:</p>
+                    <ul>
+                        <li class="highlight divisor">12 chia hết cho 3</li>
+                        <li class="highlight multiple">12 là bội của 3</li>
+                        <li class="highlight divisor">3 là ước của 12</li>
+                        <li class="highlight formula">12 = 3 × 4 với 4 là số nguyên</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Slide 3: Trực quan hóa -->
+            <div class="slide" data-duration="90">
+                <h2>Trực quan hóa ước và bội</h2>
+                <div id="visualization-number-line" class="animation-container"></div>
+                <div class="text-box">
+                    <p>Các bội của 3 tạo thành một dãy đặc biệt:</p>
+                    <p class="highlight multiple">3, 6, 9, 12, 15, 18, 21, 24...</p>
+                </div>
+            </div>
+
+            <!-- Slide 4: Trực quan ước -->
+            <div class="slide" data-duration="90">
+                <h2>Các ước của 12</h2>
+                <div id="visualization-divisors" class="animation-container"></div>
+                <div class="text-box">
+                    <p>Các ước của 12: 1, 2, 3, 4, 6, 12</p>
+                    <p>Mỗi ước đại diện cho một cách phân nhóm:</p>
+                    <ul id="divisor-list">
+                        <li>12 ÷ 1 = 12 (1 nhóm 12 đơn vị)</li>
+                        <li>12 ÷ 2 = 6 (2 nhóm 6 đơn vị)</li>
+                        <li>12 ÷ 3 = 4 (3 nhóm 4 đơn vị)</li>
+                        <li>12 ÷ 4 = 3 (4 nhóm 3 đơn vị)</li>
+                        <li>12 ÷ 6 = 2 (6 nhóm 2 đơn vị)</li>
+                        <li>12 ÷ 12 = 1 (12 nhóm 1 đơn vị)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Slide 5: Mối quan hệ đối ngẫu -->
+            <div class="slide" data-duration="60">
+                <h2>Mối quan hệ đối ngẫu</h2>
+                <div id="dual-relation" class="animation-container"></div>
+                <div class="text-box">
+                    <p>Có một mối quan hệ đối ngẫu thú vị:</p>
+                    <p class="highlight formula">Nếu a là ước của b, thì b là bội của a.</p>
+                    <p>Ví dụ: 3 là ước của 12, và 12 là bội của 3.</p>
+                </div>
+            </div>
+
+            <!-- Slide 6: Ứng dụng đồng dư thức -->
+            <div class="slide" data-duration="60">
+                <h2>Ứng dụng trong đồng dư thức</h2>
+                <div id="modular-animation" class="animation-container"></div>
+                <div class="text-box">
+                    <p class="highlight formula">a ≡ b (mod M) nghĩa là a và b có cùng số dư khi chia cho M</p>
+                    <p>Hay (a-b) chia hết cho M</p>
+                    <p>Ví dụ: 8 ≡ 2 (mod 3) vì 8 và 2 cùng có số dư 2 khi chia cho 3.</p>
+                </div>
+            </div>
+
+            <!-- Slide 7: Kết luận -->
+            <div class="slide" data-duration="30">
+                <h2>Kết luận</h2>
+                <div id="conclusion-animation" class="animation-container"></div>
+                <div class="text-box">
+                    <p>Từ khái niệm đơn giản về ước và bội, toán học phát triển nhiều lý thuyết sâu sắc:</p>
+                    <ul>
+                        <li>Số nguyên tố và phân tích thừa số nguyên tố</li>
+                        <li>Ước chung lớn nhất (GCD) và Bội chung nhỏ nhất (LCM)</li>
+                        <li>Thuật toán Euclid và ứng dụng trong mật mã</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="0-presentation.js"></script>
+</body>
+</html>
